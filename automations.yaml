@@ -1,0 +1,237 @@
+- id: '1647538814035'
+  alias: Kvällsljus
+  description: ''
+  trigger:
+  - platform: sun
+    event: sunset
+    offset: 0
+  condition: []
+  action:
+  - type: turn_on
+    device_id: 481b93ddde78677acb0b9b2aa6dabafd
+    entity_id: switch.utebelysning
+    domain: switch
+  mode: single
+- id: '1647539027785'
+  alias: Släck
+  description: ''
+  trigger:
+  - platform: time
+    at: 00:00:00
+  - platform: sun
+    event: sunrise
+    offset: 0
+  condition: []
+  action:
+  - type: turn_off
+    device_id: 481b93ddde78677acb0b9b2aa6dabafd
+    entity_id: switch.utebelysning
+    domain: switch
+  mode: single
+
+- id: '1647539238847'
+  alias: Morgonljus
+  description: ''
+  trigger:
+  - platform: time
+    at: 06:00:00
+  condition:
+  - condition: sun
+    before: sunrise
+    after: sunset
+  action:
+  - type: turn_on
+    device_id: 481b93ddde78677acb0b9b2aa6dabafd
+    entity_id: switch.utebelysning
+    domain: switch
+  mode: single
+
+- alias: Daikin_eco
+  description: Will adjust settings based on energy price-
+  trigger:
+  - platform: state
+    entity_id: sensor.heating_level
+    from: 
+      - "Normal"
+      - "Off"
+    to: "Eco"
+  condition: "{{ not is_state_attr('climate.gamla_huset', 'hvac_action', 'off') or is_state('input_boolean.offbyprice_daikin','on')  }}"
+  action:
+    service: script.set_daikin_eco
+  id: 619102838d2f47f8b2f6c37fa21aa264
+  mode: single
+
+- alias: Daikin_normal
+  description: Will adjust settings based on energy price-
+  trigger:
+  - platform: state
+    entity_id: sensor.heating_level
+    from: 
+      - "Eco"
+      - "Off"
+    to: "Normal"
+  condition: "{{ not is_state_attr('climate.gamla_huset', 'hvac_action', 'off') or is_state('input_boolean.offbyprice_daikin','on') }}"
+  action:
+    service: script.set_daikin_normal
+  id: c390f57a940d4027b517cce6c47a6493
+  mode: single
+
+- alias: Daikin_off
+  description: Will adjust settings based on energy price-
+  trigger:
+  - platform: state
+    entity_id: sensor.heating_level
+    to: 'Off'
+  action:
+    service: script.set_daikin_off
+  id: afb5a0b7754b4ce9b9ff3a49565acaf7
+  mode: single
+
+
+
+- alias: Elpanna_on
+  description: ''
+  trigger:
+  - platform: state
+    entity_id: switch.varmegolv
+    to: 'on'
+  condition: []
+  action:
+  - service: switch.turn_on
+    target:
+      entity_id:
+      - switch.elpanna
+  mode: single
+  id: 2a3b1433417e4ef68c759ddb50208fee
+
+- alias: Elpanna_off
+  description: ''
+  trigger:
+  - platform: state
+    entity_id: switch.varmegolv
+    to: 'off'
+  condition: []
+  action:
+  - service: switch.turn_off
+    target:
+      entity_id:
+      - switch.elpanna
+  mode: single
+  id: deecc85428304ac5873019eb37b96669
+
+- alias: Nybygget eco
+  description: Will adjust settings based on energy price-
+  trigger:
+  - platform: state
+    entity_id:
+    - sensor.heating_level
+  condition: "{{ not is_state_attr('climate.storstugan', 'hvac_action', 'off') or is_state('input_boolean.offbyprice_nybygget','on') }}"
+  action:
+    service: >-
+      {% if is_state('sensor.heating_level','Normal') %} script.set_nybygget_normal
+      {% elif is_state('sensor.heating_level','Eco') %} script.set_nybygget_eco
+      {% elif is_state('sensor.heating_level','Off') %} script.set_nybygget_off
+      {% else %} script.set_heating_unknown
+      {% endif %}
+  id: 669b2f3946694ce1b57a48c6dd0bcd18
+  mode: single
+
+- id: '1650799729864'
+  alias: Nybygget hemma
+  description: 'Sätter ''home'' som preset mode i nybygget. '
+  trigger:
+  - platform: state
+    entity_id: input_select.heating_level
+    to: Hemma
+  condition: []
+  action:
+  - service: climate.set_preset_mode
+    data:
+      preset_mode: home
+    target:
+      entity_id:
+      - climate.hall
+      - climate.kok
+      - climate.sovrum_nb
+      - climate.sovrum_plan2
+      - climate.storstuga
+      - climate.badrum
+  - service: '{% if is_state(''sensor.heating_level'',''Eco'') %} script.set_nybygget_eco
+      {% endif %}'
+  mode: single
+
+- id: '1650804270407'
+  alias: Nybygget borta
+  description: Sätter värme läge borta
+  trigger:
+  - platform: state
+    entity_id: input_select.heating_level
+    to: Borta
+  condition: []
+  action:
+  - service: climate.set_preset_mode
+    data:
+      preset_mode: away
+    target:
+      entity_id:
+      - climate.badrum
+      - climate.hall
+      - climate.kok
+      - climate.sovrum_nb
+      - climate.sovrum_plan2
+      - climate.storstuga
+  - service: '{% if is_state(''sensor.heating_level'',''Eco'') %} script.set_nybygget_eco
+      {% endif %}'
+  mode: single
+
+- alias: Gamla huset eco
+  description: Will adjust settings based on energy price-
+  trigger:
+  - platform: state
+    entity_id:
+    - sensor.heating_level
+  condition: "{{ not is_state_attr('climate.badrum_gamla_huset', 'hvac_action', 'off') or is_state('input_boolean.offbyprice_gamla_huset','on') }}"
+  action:
+    service: >-
+      {% if is_state('sensor.heating_level','Normal') %} script.set_gamla_huset_normal 
+      {% elif is_state('sensor.heating_level','Eco') %} script.set_gamla_huset_eco
+      {% elif is_state('sensor.heating_level','Off') %} script.set_gamla_huset_off
+      {% else %} script.set_heating_unknown
+      {% endif %}
+  mode: single
+
+- alias: Gamla huset borta
+  description: Sätter värme läge borta
+  trigger:
+  - platform: state
+    entity_id: input_select.gamla_huset_varmelage
+    to: Borta
+  condition: []
+  action:
+  - service: climate.set_preset_mode
+    data:
+      preset_mode: away
+    target:
+      entity_id:
+      - climate.badrum_gamla_huset
+  - service: '{% if is_state(''sensor.heating_level'',''Eco'') %} script.set_gamla_huset_eco
+      {% endif %}'
+  mode: single
+
+- alias: Gamla huset hemma
+  description: 'Sätter ''home'' som preset mode i gamla huset. '
+  trigger:
+  - platform: state
+    entity_id: input_select.gamla_huset_varmelage
+    to: Hemma
+  condition: []
+  action:
+  - service: climate.set_preset_mode
+    data:
+      preset_mode: home
+    target:
+      entity_id:
+      - climate.badrum_gamla_huset
+  - service: '{% if is_state(''sensor.heating_level'',''Eco'') %} script.set_gamla_huset_eco
+      {% endif %}'
+  mode: single

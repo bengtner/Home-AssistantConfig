@@ -1,0 +1,170 @@
+# Configure a default setup of Home Assistant (frontend, api, etc)
+default_config:
+
+# Text to speech
+tts:
+  - platform: google_translate
+cloud:
+
+template:
+  - sensor:
+    - name: "Heating level"
+      state: >
+        {% if states('sensor.electricity_price_torngard_201')|float(0) > states('input_number.max_pris')|float(0) %}
+          Off
+        {% elif states('sensor.electricity_price_torngard_201')|float(0)
+          > state_attr('sensor.electricity_price_torngard_201', 'avg_price')|float(0)
+          * (1.0 + (states('input_number.indata')|float(0))/100.0 ) %}
+          Eco
+        {% else %}
+          Normal
+        {% endif %}
+climate:
+  - platform: simple_thermostat
+    name: Uterum
+    heater: switch.uterum
+    target_sensor: sensor.uterum
+    min_temp: 0.0
+    max_temp: 25.0
+#    target_temp: 5.0
+    ac_mode: false
+    cold_tolerance: 0.3
+    hot_tolerance: 0
+    min_cycle_duration:
+      minutes: 10
+    keep_alive:
+      minutes: 10
+    initial_hvac_mode: "heat"
+    precision: 1
+
+  - platform: simple_thermostat
+    name: Badrum gamla huset
+    heater: light.golvvarme_badrum_on_off
+    target_sensor: sensor.badrum_temperature
+    min_temp: 0.0
+    max_temp: 25.0
+#    target_temp: 5.0
+    ac_mode: false
+    cold_tolerance: 0.3
+    hot_tolerance: 0
+    min_cycle_duration:
+      minutes: 10
+    keep_alive:
+      minutes: 10
+    initial_hvac_mode: "heat"
+    precision: 1
+  
+  - platform: simple_thermostat
+    name: Sovrum plan2
+    heater: switch.sovrum_plan2_el
+    target_sensor: sensor.sovrum_plan2_temperature
+    min_temp: 0.0
+    max_temp: 25.0
+#    target_temp: 20.0
+    ac_mode: false
+    cold_tolerance: 0.3
+    hot_tolerance: 0
+    min_cycle_duration:
+      minutes: 10
+    keep_alive:
+      minutes: 10
+    initial_hvac_mode: "heat"
+    precision: 1
+  
+  - platform: simple_thermostat
+    name: Hall
+    heater: switch.hall
+    target_sensor: sensor.hall
+    min_temp: 0.0
+    max_temp: 25.0
+#    target_temp: 20.0
+    ac_mode: false
+    cold_tolerance: 0.3
+    hot_tolerance: 0
+    min_cycle_duration:
+      minutes: 10
+    keep_alive:
+      minutes: 10
+    initial_hvac_mode: "heat"
+    precision: 1
+  
+  - platform: simple_thermostat
+    name: Badrum
+    heater: switch.badrum
+    target_sensor: sensor.badrum
+    min_temp: 0.0
+    max_temp: 25.0
+#    target_temp: 20.0
+    ac_mode: false
+    cold_tolerance: 0.3
+    hot_tolerance: 0
+    min_cycle_duration:
+      minutes: 10
+    keep_alive:
+      minutes: 10
+    initial_hvac_mode: "heat"
+    precision: 1
+  
+  - platform: simple_thermostat
+    name: Sovrum nb
+    heater: switch.sovrum_nb
+    target_sensor: sensor.sovrum_nb
+    min_temp: 0.0
+    max_temp: 25.0
+#    target_temp: 20.0
+    ac_mode: false
+    cold_tolerance: 0.3
+    hot_tolerance: 0
+    min_cycle_duration:
+      minutes: 10
+    keep_alive:
+      minutes: 10
+    initial_hvac_mode: "heat"
+    precision: 1
+
+  - platform: simple_thermostat
+    name: Storstuga
+    heater: switch.storstuga
+    target_sensor: sensor.storstugan_temperature
+    min_temp: 0.0
+    max_temp: 25.0
+#    target_temp: 20.0
+    ac_mode: false
+    cold_tolerance: 0.3
+    hot_tolerance: 0
+    min_cycle_duration:
+      minutes: 10
+    keep_alive:
+      minutes: 10
+    initial_hvac_mode: "heat"
+    precision: 1
+  
+  - platform: simple_thermostat
+    name: Kök
+    heater: switch.kok
+    target_sensor: sensor.kok
+    min_temp: 0
+    max_temp: 25
+#    target_temp: 20
+    ac_mode: false
+    cold_tolerance: 0.3
+    hot_tolerance: 0
+    min_cycle_duration:
+      minutes: 10
+    keep_alive:
+      minutes: 10
+    initial_hvac_mode: "heat"
+    precision: 1
+switch:
+  - platform: group
+    name: "Värmegolv"
+    entities:
+      - switch.storstuga
+      - switch.sovrum_nb
+      - switch.badrum
+      - switch.kok
+      - switch.uterum
+      - switch.hall
+automation: !include automations.yaml
+script: !include scripts.yaml
+scene: !include scenes.yaml
