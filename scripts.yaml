@@ -24,13 +24,18 @@ set_daikin_normal:
       target:
         entity_id: 
           - input_boolean.offbyprice_daikin
+    - service: input_boolean.turn_off
+      target:
+        entity_id: 
+          - input_boolean.eco_daikin
 
 set_daikin_eco:
   sequence:
     - variables:
         setpoint_eco : >-
-          {% if not is_state_attr('climate.gamla_huset', 'preset_mode', 'eco') %} {{(states.climate.gamla_huset.attributes.temperature|float(0) - states('input_number.eco_sankning')|float(0))}}
-          {% else %} {{(states.climate.gamla_huset.attributes.temperature|float(0))}}
+          {% if is_state('input_boolean.eco_daikin','on')  %} {{(states.climate.gamla_huset.attributes.temperature|float(0))}}
+          {% elif state_attr('climate.gamla_huset', 'preset_mode') == 'none' %} {{(states.climate.gamla_huset.attributes.temperature|float(0) - states('input_number.eco_sankning')|float(0))}}
+          {% else  %} {{(states.climate.gamla_huset.attributes.temperature|float(0))}}
           {% endif %} 
     - service: persistent_notification.create
       data:
@@ -50,6 +55,11 @@ set_daikin_eco:
       target:
         entity_id: 
           - input_boolean.offbyprice_daikin
+    - service: input_boolean.turn_off
+      target:
+        entity_id: 
+          - input_boolean.eco_daikin
+        
 
 set_daikin_off:
   sequence:
@@ -60,6 +70,13 @@ set_daikin_off:
       target:
         entity_id: 
           - input_boolean.offbyprice_daikin
+    - service: >-
+        {% if is_state_attr('climate.gamla_huset', 'preset_mode', 'eco')  %} input_boolean.turn_on
+        {% else %} input_boolean.turn_off
+        {% endif %}
+      target:
+        entity_id: 
+          - input_boolean.eco_daikin
     - service: climate.set_hvac_mode
       target:
         entity_id: climate.gamla_huset
