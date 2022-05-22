@@ -62,7 +62,7 @@ set_daikin_eco:
         
 
 set_daikin_off:
-  sequence:
+  sequence:  
     - service: >-
         {% if not is_state_attr('climate.gamla_huset', 'hvac_action', 'off')  %} input_boolean.turn_on
         {% else %} input_boolean.turn_off
@@ -82,6 +82,9 @@ set_daikin_off:
         entity_id: climate.gamla_huset
       data:
         hvac_mode: 'off'
+    - service: persistent_notification.create
+      data:
+        message: "Set Daikin Off. Preset mode: {{states.climate.gamla_huset.attributes.preset_mode}}. "
 
 
 
