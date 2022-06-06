@@ -52,7 +52,7 @@
   - platform: state
     entity_id: sensor.heating_level
 
-  condition: "{{ not is_state_attr('climate.gamla_huset', 'hvac_action', 'off') or is_state('input_boolean.offbyprice_daikin','on')  }}"
+  condition: "{{ not is_state_attr('climate.daikin_gamla_huset', 'hvac_action', 'off') or is_state('input_boolean.offbyprice_daikin','on')  }}"
   action:
     service: >-
       {% if is_state('sensor.heating_level','Normal') %} script.set_daikin_normal
