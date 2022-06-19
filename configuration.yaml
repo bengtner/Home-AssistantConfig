@@ -8,17 +8,20 @@ cloud:
 
 template:
   - sensor:
-    - name: "Heating level"
-      state: >
-        {% if states('sensor.electricity_price_torngard_201')|float(0) > states('input_number.max_pris')|float(0) %}
-          Off
-        {% elif states('sensor.electricity_price_torngard_201')|float(0)
-          > state_attr('sensor.electricity_price_torngard_201', 'avg_price')|float(0)
-          * (1.0 + (states('input_number.indata')|float(0))/100.0 ) %}
-          Eco
-        {% else %}
-          Normal
-        {% endif %}
+      - name: "Heating level"
+        state: >
+          {% if states('sensor.electricity_price_torngard_201')|float(0) > states('input_number.max_pris')|float(0) %}
+            Off
+          {% elif states('sensor.electricity_price_torngard_201')|float(0)
+            > state_attr('sensor.electricity_price_torngard_201', 'avg_price')|float(0)
+            * (1.0 + (states('input_number.indata')|float(0))/100.0 ) %}
+            Eco
+          {% else %}
+            Normal
+          {% endif %}
+  - sensor:
+      - name: "Wateralarm"
+        state: "Off"
 climate:
   - platform: simple_thermostat
     name: Uterum
@@ -26,7 +29,7 @@ climate:
     target_sensor: sensor.uterum
     min_temp: 0.0
     max_temp: 25.0
-#    target_temp: 5.0
+    #    target_temp: 5.0
     ac_mode: false
     cold_tolerance: 0.3
     hot_tolerance: 0
@@ -43,7 +46,7 @@ climate:
     target_sensor: sensor.badrum_temperature
     min_temp: 0.0
     max_temp: 25.0
-#    target_temp: 5.0
+    #    target_temp: 5.0
     ac_mode: false
     cold_tolerance: 0.3
     hot_tolerance: 0
@@ -53,14 +56,14 @@ climate:
       minutes: 10
     initial_hvac_mode: "heat"
     precision: 1
-  
+
   - platform: simple_thermostat
     name: Sovrum plan2
     heater: switch.sovrum_plan2_el
     target_sensor: sensor.sovrum_plan2_temperature
     min_temp: 0.0
     max_temp: 25.0
-#    target_temp: 20.0
+    #    target_temp: 20.0
     ac_mode: false
     cold_tolerance: 0.3
     hot_tolerance: 0
@@ -70,14 +73,14 @@ climate:
       minutes: 10
     initial_hvac_mode: "heat"
     precision: 1
-  
+
   - platform: simple_thermostat
     name: Hall
     heater: switch.hall
     target_sensor: sensor.hall
     min_temp: 0.0
     max_temp: 25.0
-#    target_temp: 20.0
+    #    target_temp: 20.0
     ac_mode: false
     cold_tolerance: 0.3
     hot_tolerance: 0
@@ -87,14 +90,14 @@ climate:
       minutes: 10
     initial_hvac_mode: "heat"
     precision: 1
-  
+
   - platform: simple_thermostat
     name: Badrum
     heater: switch.badrum
     target_sensor: sensor.badrum
     min_temp: 0.0
     max_temp: 25.0
-#    target_temp: 20.0
+    #    target_temp: 20.0
     ac_mode: false
     cold_tolerance: 0.3
     hot_tolerance: 0
@@ -104,14 +107,14 @@ climate:
       minutes: 10
     initial_hvac_mode: "heat"
     precision: 1
-  
+
   - platform: simple_thermostat
     name: Sovrum nb
     heater: switch.sovrum_nb
     target_sensor: sensor.sovrum_nb
     min_temp: 0.0
     max_temp: 25.0
-#    target_temp: 20.0
+    #    target_temp: 20.0
     ac_mode: false
     cold_tolerance: 0.3
     hot_tolerance: 0
@@ -128,7 +131,7 @@ climate:
     target_sensor: sensor.storstugan_temperature
     min_temp: 0.0
     max_temp: 25.0
-#    target_temp: 20.0
+    #    target_temp: 20.0
     ac_mode: false
     cold_tolerance: 0.3
     hot_tolerance: 0
@@ -138,14 +141,14 @@ climate:
       minutes: 10
     initial_hvac_mode: "heat"
     precision: 1
-  
+
   - platform: simple_thermostat
     name: Kök
     heater: switch.kok
     target_sensor: sensor.kok
     min_temp: 0
     max_temp: 25
-#    target_temp: 20
+    #    target_temp: 20
     ac_mode: false
     cold_tolerance: 0.3
     hot_tolerance: 0
@@ -155,6 +158,22 @@ climate:
       minutes: 10
     initial_hvac_mode: "heat"
     precision: 1
+  - platform: simple_thermostat
+    name: Pool
+    heater: switch.poolheating
+    target_sensor: sensor.pooltemp
+    min_temp: 5.0
+    max_temp: 30.0
+    #    target_temp: 5.0
+    ac_mode: false
+    cold_tolerance: 0.3
+    hot_tolerance: 0
+    min_cycle_duration:
+      minutes: 10
+    keep_alive:
+      minutes: 10
+    initial_hvac_mode: "heat"
+    precision: 0.5
 switch:
   - platform: group
     name: "Värmegolv"

@@ -209,3 +209,19 @@
   - service: '{% if is_state(''sensor.heating_level'',''Eco'') %} script.set_gamla_huset_eco
       {% endif %}'
   mode: single
+
+- alias: Pool autoadjust
+  description: Will adjust settings based on energy price-
+  trigger:
+  - platform: state
+    entity_id:
+    - sensor.heating_level
+  condition: "{{ not is_state_attr('climate.pool', 'hvac_action', 'off') or is_state('input_boolean.offbyprice_pool','on') }}"
+  action:
+    service: >-
+      {% if is_state('sensor.heating_level','Normal') %} script.set_pool_normal
+      {% elif is_state('sensor.heating_level','Eco') %} script.set_pool_eco
+      {% elif is_state('sensor.heating_level','Off') %} script.set_pool_off
+      {% else %} script.set_heating_unknown
+      {% endif %}
+  mode: single
