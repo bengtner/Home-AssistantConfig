@@ -225,3 +225,31 @@
       {% else %} script.set_heating_unknown
       {% endif %}
   mode: single
+- alias: Switch_on
+  description: Turn switch on based on energy price
+  trigger:
+  - platform: state
+    entity_id:
+    - sensor.heating_level
+    to: Normal
+  action:
+    service: switch.turn_on
+    target:
+      entity_id: switch.IKEA_of_Sweden_TRADFRI_control_outlet_37da3ffe_on_off
+  mode: single
+
+- alias: Switch_off
+  description: Turn switch off based on energy price
+  trigger:
+  - platform: state
+    entity_id:
+    - sensor.heating_level
+    to: Eco,Off
+  action:
+    service: switch.turn_off
+    target:
+      entity_id: switch.IKEA_of_Sweden_TRADFRI_control_outlet_37da3ffe_on_off
+  mode: single
+      
+
+      

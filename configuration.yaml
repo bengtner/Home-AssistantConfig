@@ -19,9 +19,22 @@ template:
           {% else %}
             Normal
           {% endif %}
-  - sensor:
-      - name: "Wateralarm"
-        state: "Off"
+      - name: "Pool circulation all"
+        state: >
+          {% if is_state('switch.poolcirculation','on') or is_state('switch.poolheating','on') %}
+            on
+          {% else %}
+            off
+          {% endif %}
+sensor:
+  - platform: history_stats
+    name: Poolvärme idag
+    entity_id: switch.poolheating
+    state: "on"
+    type: time
+    start: "{{ now().replace(hour=0, minute=0, second=0) }}"
+    end: "{{ now() }}"          
+
 climate:
   - platform: simple_thermostat
     name: Uterum

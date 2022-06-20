@@ -391,7 +391,7 @@ set_pool_off:
         %}"
       target:
         entity_id:
-          - input_boolean.offbyprice_gamla_huset
+          - input_boolean.offbyprice_pool
     - service: climate.set_hvac_mode
       target:
         entity_id:
