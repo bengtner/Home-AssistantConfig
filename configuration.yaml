@@ -28,12 +28,32 @@ template:
           {% endif %}
 sensor:
   - platform: history_stats
-    name: Poolvärme idag
+    name: Poolheating daily
     entity_id: switch.poolheating
     state: "on"
     type: time
     start: "{{ now().replace(hour=0, minute=0, second=0) }}"
+    end: "{{ now() }}"
+  - platform: history_stats
+    name: Waterfill daily
+    entity_id: switch.poolwater
+    state: "on"
+    type: time
+    start: "{{ now().replace(hour=0, minute=0, second=0) }}"
     end: "{{ now() }}"          
+  - platform: history_stats
+    name: Watercirculation daily
+    entity_id: sensor.pool_circulation_all
+    state: "on"
+    type: time
+    start: "{{ now().replace(hour=0, minute=0, second=0) }}"
+    end: "{{ now() }}"   
+  - platform: filter
+    name: "Filtered low water"
+    entity_id: binary_sensor.poolwaterlevel
+    filters:
+      - filter: time_throttle
+        window_size: "0:10"
 
 climate:
   - platform: simple_thermostat

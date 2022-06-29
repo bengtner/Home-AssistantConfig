@@ -1,56 +1,56 @@
-- id: '1647538814035'
+- id: "1647538814035"
   alias: Kvällsljus
-  description: ''
+  description: ""
   trigger:
-  - platform: sun
-    event: sunset
-    offset: 0
+    - platform: sun
+      event: sunset
+      offset: 0
   condition: []
   action:
-  - type: turn_on
-    device_id: 481b93ddde78677acb0b9b2aa6dabafd
-    entity_id: switch.utebelysning
-    domain: switch
+    - type: turn_on
+      device_id: 481b93ddde78677acb0b9b2aa6dabafd
+      entity_id: switch.utebelysning
+      domain: switch
   mode: single
-- id: '1647539027785'
+- id: "1647539027785"
   alias: Släck
-  description: ''
+  description: ""
   trigger:
-  - platform: time
-    at: 00:00:00
-  - platform: sun
-    event: sunrise
-    offset: 0
+    - platform: time
+      at: 00:00:00
+    - platform: sun
+      event: sunrise
+      offset: 0
   condition: []
   action:
-  - type: turn_off
-    device_id: 481b93ddde78677acb0b9b2aa6dabafd
-    entity_id: switch.utebelysning
-    domain: switch
+    - type: turn_off
+      device_id: 481b93ddde78677acb0b9b2aa6dabafd
+      entity_id: switch.utebelysning
+      domain: switch
   mode: single
 
-- id: '1647539238847'
+- id: "1647539238847"
   alias: Morgonljus
-  description: ''
+  description: ""
   trigger:
-  - platform: time
-    at: 06:00:00
+    - platform: time
+      at: 06:00:00
   condition:
-  - condition: sun
-    before: sunrise
-    after: sunset
+    - condition: sun
+      before: sunrise
+      after: sunset
   action:
-  - type: turn_on
-    device_id: 481b93ddde78677acb0b9b2aa6dabafd
-    entity_id: switch.utebelysning
-    domain: switch
+    - type: turn_on
+      device_id: 481b93ddde78677acb0b9b2aa6dabafd
+      entity_id: switch.utebelysning
+      domain: switch
   mode: single
 
 - alias: Daikin autoadjust
   description: Will adjust settings based on energy price-
   trigger:
-  - platform: state
-    entity_id: sensor.heating_level
+    - platform: state
+      entity_id: sensor.heating_level
 
   condition: "{{ not is_state_attr('climate.daikin_gamla_huset', 'hvac_action', 'off') or is_state('input_boolean.offbyprice_daikin','on')  }}"
   action:
@@ -64,41 +64,41 @@
   mode: single
 
 - alias: Elpanna_on
-  description: ''
+  description: ""
   trigger:
-  - platform: state
-    entity_id: switch.varmegolv
-    to: 'on'
+    - platform: state
+      entity_id: switch.varmegolv
+      to: "on"
   condition: []
   action:
-  - service: switch.turn_on
-    target:
-      entity_id:
-      - switch.elpanna
+    - service: switch.turn_on
+      target:
+        entity_id:
+          - switch.elpanna
   mode: single
   id: 2a3b1433417e4ef68c759ddb50208fee
 
 - alias: Elpanna_off
-  description: ''
+  description: ""
   trigger:
-  - platform: state
-    entity_id: switch.varmegolv
-    to: 'off'
+    - platform: state
+      entity_id: switch.varmegolv
+      to: "off"
   condition: []
   action:
-  - service: switch.turn_off
-    target:
-      entity_id:
-      - switch.elpanna
+    - service: switch.turn_off
+      target:
+        entity_id:
+          - switch.elpanna
   mode: single
   id: deecc85428304ac5873019eb37b96669
 
 - alias: Nybygget autoadjust
   description: Will adjust settings based on energy price-
   trigger:
-  - platform: state
-    entity_id:
-    - sensor.heating_level
+    - platform: state
+      entity_id:
+        - sensor.heating_level
   condition: "{{ not is_state_attr('climate.storstugan', 'hvac_action', 'off') or is_state('input_boolean.offbyprice_nybygget','on') }}"
   action:
     service: >-
@@ -110,60 +110,62 @@
   id: 669b2f3946694ce1b57a48c6dd0bcd18
   mode: single
 
-- id: '1650799729864'
+- id: "1650799729864"
   alias: Nybygget hemma
-  description: 'Sätter ''home'' som preset mode i nybygget. '
+  description: "Sätter 'home' som preset mode i nybygget. "
   trigger:
-  - platform: state
-    entity_id: input_select.heating_level
-    to: Hemma
+    - platform: state
+      entity_id: input_select.heating_level
+      to: Hemma
   condition: []
   action:
-  - service: climate.set_preset_mode
-    data:
-      preset_mode: home
-    target:
-      entity_id:
-      - climate.hall
-      - climate.kok
-      - climate.sovrum_nb
-      - climate.sovrum_plan2
-      - climate.storstuga
-      - climate.badrum
-  - service: '{% if is_state(''sensor.heating_level'',''Eco'') %} script.set_nybygget_eco
-      {% endif %}'
+    - service: climate.set_preset_mode
+      data:
+        preset_mode: home
+      target:
+        entity_id:
+          - climate.hall
+          - climate.kok
+          - climate.sovrum_nb
+          - climate.sovrum_plan2
+          - climate.storstuga
+          - climate.badrum
+    - service:
+        "{% if is_state('sensor.heating_level','Eco') %} script.set_nybygget_eco
+        {% endif %}"
   mode: single
 
-- id: '1650804270407'
+- id: "1650804270407"
   alias: Nybygget borta
   description: Sätter värme läge borta
   trigger:
-  - platform: state
-    entity_id: input_select.heating_level
-    to: Borta
+    - platform: state
+      entity_id: input_select.heating_level
+      to: Borta
   condition: []
   action:
-  - service: climate.set_preset_mode
-    data:
-      preset_mode: away
-    target:
-      entity_id:
-      - climate.badrum
-      - climate.hall
-      - climate.kok
-      - climate.sovrum_nb
-      - climate.sovrum_plan2
-      - climate.storstuga
-  - service: '{% if is_state(''sensor.heating_level'',''Eco'') %} script.set_nybygget_eco
-      {% endif %}'
+    - service: climate.set_preset_mode
+      data:
+        preset_mode: away
+      target:
+        entity_id:
+          - climate.badrum
+          - climate.hall
+          - climate.kok
+          - climate.sovrum_nb
+          - climate.sovrum_plan2
+          - climate.storstuga
+    - service:
+        "{% if is_state('sensor.heating_level','Eco') %} script.set_nybygget_eco
+        {% endif %}"
   mode: single
 
 - alias: Gamla huset autoadjust
   description: Will adjust settings based on energy price-
   trigger:
-  - platform: state
-    entity_id:
-    - sensor.heating_level
+    - platform: state
+      entity_id:
+        - sensor.heating_level
   condition: "{{ not is_state_attr('climate.badrum_gamla_huset', 'hvac_action', 'off') or is_state('input_boolean.offbyprice_gamla_huset','on') }}"
   action:
     service: >-
@@ -177,45 +179,46 @@
 - alias: Gamla huset borta
   description: Sätter värme läge borta
   trigger:
-  - platform: state
-    entity_id: input_select.gamla_huset_varmelage
-    to: Borta
+    - platform: state
+      entity_id: input_select.gamla_huset_varmelage
+      to: Borta
   condition: []
   action:
-  - service: climate.set_preset_mode
-    data:
-      preset_mode: away
-    target:
-      entity_id:
-      - climate.badrum_gamla_huset
-  - service: '{% if is_state(''sensor.heating_level'',''Eco'') %} script.set_gamla_huset_eco
-      {% endif %}'
+    - service: climate.set_preset_mode
+      data:
+        preset_mode: away
+      target:
+        entity_id:
+          - climate.badrum_gamla_huset
+    - service:
+        "{% if is_state('sensor.heating_level','Eco') %} script.set_gamla_huset_eco
+        {% endif %}"
   mode: single
 
 - alias: Gamla huset hemma
-  description: 'Sätter ''home'' som preset mode i gamla huset. '
+  description: "Sätter 'home' som preset mode i gamla huset. "
   trigger:
-  - platform: state
-    entity_id: input_select.gamla_huset_varmelage
-    to: Hemma
+    - platform: state
+      entity_id: input_select.gamla_huset_varmelage
+      to: Hemma
   condition: []
   action:
-  - service: climate.set_preset_mode
-    data:
-      preset_mode: home
-    target:
-      entity_id:
-      - climate.badrum_gamla_huset
-  - service: '{% if is_state(''sensor.heating_level'',''Eco'') %} script.set_gamla_huset_eco
-      {% endif %}'
+    - service: climate.set_preset_mode
+      data:
+        preset_mode: home
+      target:
+        entity_id:
+          - climate.badrum_gamla_huset
+    - service:
+        "{% if is_state('sensor.heating_level','Eco') %} script.set_gamla_huset_eco
+        {% endif %}"
   mode: single
-
 - alias: Pool autoadjust
   description: Will adjust settings based on energy price-
   trigger:
-  - platform: state
-    entity_id:
-    - sensor.heating_level
+    - platform: state
+      entity_id:
+        - sensor.heating_level
   condition: "{{ not is_state_attr('climate.pool', 'hvac_action', 'off') or is_state('input_boolean.offbyprice_pool','on') }}"
   action:
     service: >-
@@ -225,13 +228,15 @@
       {% else %} script.set_heating_unknown
       {% endif %}
   mode: single
+
 - alias: Switch_on
   description: Turn switch on based on energy price
   trigger:
-  - platform: state
-    entity_id:
-    - sensor.heating_level
-    to: Normal
+    - platform: state
+      entity_id:
+        - sensor.heating_level
+      to: Normal
+  condition: []
   action:
     service: switch.turn_on
     target:
@@ -241,15 +246,66 @@
 - alias: Switch_off
   description: Turn switch off based on energy price
   trigger:
-  - platform: state
-    entity_id:
-    - sensor.heating_level
-    to: Eco,Off
+    - platform: state
+      entity_id:
+        - sensor.heating_level
+      to:
+        - "Eco"
+        - "Off"
+  condition: []
   action:
     service: switch.turn_off
     target:
-      entity_id: switch.IKEA_of_Sweden_TRADFRI_control_outlet_37da3ffe_on_off
+      entity_id:
+        - switch.IKEA_of_Sweden_TRADFRI_control_outlet_37da3ffe_on_off
+        - switch.poolcirculation
   mode: single
-      
 
-      
+- alias: Circulation_top_up
+  description: Add circulation to reach daily target
+  trigger:
+    - platform: state
+      entity_id:
+        - sensor.heating_level
+      to: Normal
+  action:
+    - service: script.circulation_on
+  mode: single
+
+- alias: stop_circulation_after_time
+  description: Stops circulation when daily target is reached
+  trigger:
+    - platform: state
+      entity_id: switch.poolcirculation
+      from: "off"
+      for: "{{states('input_text.circulation_time')}}"
+      to: "on"
+  action:
+    - service: script.circulation_off
+  mode: single
+- alias: stop_circulation_by_price
+  description: Stops circulation when energy price is too high
+  trigger:
+    - platform: state
+      entity_id: sensor.heatinglevel
+      to:
+        - "Eco"
+        - "Off"
+  condition: []
+  action:
+    - service: script.circulation_off
+  mode: single
+
+- alias: stop_circulation_by_price
+  description: Stops circulation when energy price is too high
+  trigger:
+    - platform: state
+      entity_id: sensor.heatinglevel
+      to:
+        - "Eco"
+        - "Off"
+  condition: []
+  action:
+    - service: switch.turn_off
+      entity_id: switch.poolcirculation
+  mode: single

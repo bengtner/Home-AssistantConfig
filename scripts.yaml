@@ -386,7 +386,7 @@ set_pool_eco:
 set_pool_off:
   sequence:
     - service:
-        "{% if not is_state_attr('climate.badrum_gamla_huset', 'hvac_action',
+        "{% if not is_state_attr('climate.pool', 'hvac_action',
         'off')  %} input_boolean.turn_on {% else %} input_boolean.turn_off {% endif
         %}"
       target:
@@ -395,6 +395,55 @@ set_pool_off:
     - service: climate.set_hvac_mode
       target:
         entity_id:
-          - climate.badrum_gamla_huset
+          - climate.pool
       data:
         hvac_mode: "off"
+topup_circulation:
+  sequence:
+    - service:
+        input_text.set_value
+      data: 
+        value: "1:00:00"
+      target:
+        entity_id:
+          - input_text.circulation_time
+    - service: persistent_notification.create
+      data:
+        message: "Turn on circulation for {{ states('input_text.circulation_time')}}"
+    - service: switch.turn_on
+      target:
+        entity_id:
+          - switch.poolcirculation
+
+circulation_on:
+  sequence:
+  - variables:
+      ontime: >-
+        {% set diff = states('input_number.daily_circulation') | float(0) - 
+        states('sensor.watercirculation_daily') | float(0) %}
+        {% if diff > 0 %}
+        {{ diff }}
+        {% else %}
+        0 
+        {% endif %}
+  - service:
+      input_text.set_value
+    data: 
+      value: "{{ ontime | int }}:{{ (ontime - ontime | int)*60 }}:00"
+    target:
+      entity_id:
+        - input_text.circulation_time
+  - service: persistent_notification.create
+    data:
+      message: "Turn on circulation for {{ states('input_text.circulation_time')}}"
+  - service: switch.turn_on
+    target:
+      entity_id:
+        - switch.poolcirculation
+        
+circulation_off:
+  sequence:
+    - service: switch.turn_off
+      target:
+        entity_id:
+          - switch.poolcirculation
