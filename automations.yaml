@@ -229,19 +229,7 @@
       {% endif %}
   mode: single
 
-- alias: Switch_on
-  description: Turn switch on based on energy price
-  trigger:
-    - platform: state
-      entity_id:
-        - sensor.heating_level
-      to: Normal
-  condition: []
-  action:
-    service: switch.turn_on
-    target:
-      entity_id: switch.IKEA_of_Sweden_TRADFRI_control_outlet_37da3ffe_on_off
-  mode: single
+
 
 - alias: Switch_off
   description: Turn switch off based on energy price
@@ -258,18 +246,20 @@
     target:
       entity_id:
         - switch.IKEA_of_Sweden_TRADFRI_control_outlet_37da3ffe_on_off
-        - switch.poolcirculation
   mode: single
 
-- alias: Circulation_top_up
-  description: Add circulation to reach daily target
+- alias: Cirkulation_top_up
+  description: Turn cirkulation on to reach daily target
   trigger:
     - platform: state
       entity_id:
-        - sensor.heating_level
-      to: Normal
+        - sensor.electricity_price_torngard_201
+  condition: >-
+    {{is_state('switch.poolcirkulation','off') and states('sensor.electricity_price_torngard_201')|float(0)
+            < state_attr('sensor.electricity_price_torngard_201', 'avg_price')|float(0)
+            * (1.0 + (states('input_number.indata')|float(0))/100.0 )}}
   action:
-    - service: script.circulation_on
+    service: script.circulation_on
   mode: single
 
 - alias: stop_circulation_after_time
@@ -283,6 +273,7 @@
   action:
     - service: script.circulation_off
   mode: single
+
 - alias: stop_circulation_by_price
   description: Stops circulation when energy price is too high
   trigger:
@@ -296,16 +287,3 @@
     - service: script.circulation_off
   mode: single
 
-- alias: stop_circulation_by_price
-  description: Stops circulation when energy price is too high
-  trigger:
-    - platform: state
-      entity_id: sensor.heatinglevel
-      to:
-        - "Eco"
-        - "Off"
-  condition: []
-  action:
-    - service: switch.turn_off
-      entity_id: switch.poolcirculation
-  mode: single
