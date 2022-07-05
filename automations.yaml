@@ -130,9 +130,13 @@
           - climate.sovrum_plan2
           - climate.storstuga
           - climate.badrum
-    - service:
-        "{% if is_state('sensor.heating_level','Eco') %} script.set_nybygget_eco
-        {% endif %}"
+    - service: >-
+        {% if is_state('sensor.heating_level','Normal') %} script.set_nybygget_normal
+        {% elif is_state('sensor.heating_level','Eco') %} script.set_nybygget_eco
+        {% elif is_state('sensor.heating_level','Off') %} script.set_nybygget_off
+        {% else %} script.set_heating_unknown
+        {% endif %}
+#    - service: script.vv_nybygget_on
   mode: single
 
 - id: "1650804270407"
@@ -155,9 +159,13 @@
           - climate.sovrum_nb
           - climate.sovrum_plan2
           - climate.storstuga
-    - service:
-        "{% if is_state('sensor.heating_level','Eco') %} script.set_nybygget_eco
-        {% endif %}"
+    - service: >-
+        {% if is_state('sensor.heating_level','Eco') %} script.set_nybygget_eco
+        {% elif is_state('sensor.heating_level','Normal') %} script.set_nybygget_normal
+        {% elif is_state('sensor.heating_level','Off') %} script.set_nybygget_off
+        {% else %} script.set_heating_unknown
+        {% endif %}
+#    - service: script.vv_nybygget_off
   mode: single
 
 - alias: Gamla huset autoadjust
@@ -229,7 +237,18 @@
       {% endif %}
   mode: single
 
-
+- alias: Switch_on
+  description: Turn switch on based on energy price
+  trigger:
+  - platform: state
+    entity_id:
+    - sensor.heating_level
+    to: Normal
+  action:
+    service: switch.turn_on
+    target:
+      entity_id: switch.IKEA_of_Sweden_TRADFRI_control_outlet_37da3ffe_on_off
+  mode: single
 
 - alias: Switch_off
   description: Turn switch off based on energy price
@@ -248,16 +267,17 @@
         - switch.IKEA_of_Sweden_TRADFRI_control_outlet_37da3ffe_on_off
   mode: single
 
-- alias: Cirkulation_top_up
-  description: Turn cirkulation on to reach daily target
+- alias: Circulation_top_up
+  id: "195603032417"
+  description: Turn circulation on to reach daily target
   trigger:
     - platform: state
       entity_id:
         - sensor.electricity_price_torngard_201
   condition: >-
-    {{is_state('switch.poolcirkulation','off') and states('sensor.electricity_price_torngard_201')|float(0)
+    {{is_state('switch.poolcirculation','off')  and states('sensor.electricity_price_torngard_201')|float(0)
             < state_attr('sensor.electricity_price_torngard_201', 'avg_price')|float(0)
-            * (1.0 + (states('input_number.indata')|float(0))/100.0 )}}
+            * (1.0 + (states('input_number.niva')|float(0))/100.0 )}}
   action:
     service: script.circulation_on
   mode: single
@@ -278,11 +298,11 @@
   description: Stops circulation when energy price is too high
   trigger:
     - platform: state
-      entity_id: sensor.heatinglevel
-      to:
-        - "Eco"
-        - "Off"
-  condition: []
+      entity_id: sensor.electricity_price_torngard_201
+  condition: ->
+    {{is_state('switch.poolcirculation','on')  and states('sensor.electricity_price_torngard_201')|float(0)
+            > state_attr('sensor.electricity_price_torngard_201', 'avg_price')|float(0)
+            * (1.0 + (states('input_number.niva')|float(0))/100.0 )}}
   action:
     - service: script.circulation_off
   mode: single

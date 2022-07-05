@@ -118,6 +118,10 @@ set_nybygget_normal:
       target:
         entity_id:
           - input_boolean.offbyprice_nybygget
+    - service: >-
+        {% if is_state('input_select.heating_level','Hemma') and is_state('sensor.heating_level','Normal') %} script.vv_nybygget_on 
+        {%else%} script.vv_nybygget_off
+        {%endif %}
 
 set_nybygget_eco:
   sequence:
@@ -243,6 +247,10 @@ set_nybygget_off:
           - climate.uterum
       data:
         hvac_mode: "off"
+    - service: switch.turn_off
+      target:
+        entity_id:
+          - switch.sonoff_1001464ae8
 set_gamla_huset_normal:
   sequence:
     - service: climate.set_preset_mode
@@ -429,7 +437,7 @@ circulation_on:
   - service:
       input_text.set_value
     data: 
-      value: "{{ ontime | int }}:{{ (ontime - ontime | int)*60 }}:00"
+      value: "{{ ontime | int }}:{{ ((ontime - ontime | int)*60)  | int }}:00"
     target:
       entity_id:
         - input_text.circulation_time
@@ -447,3 +455,23 @@ circulation_off:
       target:
         entity_id:
           - switch.poolcirculation
+
+vv_nybygget_off:
+  sequence:
+    - service: switch.turn_off
+      target:
+        entity_id:
+          - switch.sonoff_1001464ae8
+vv_nybygget_on:
+  sequence:
+    - service: switch.turn_on
+      target:
+        entity_id:
+          - switch.sonoff_1001464ae8
+test_message:
+  sequence:
+    - service: >-
+          persistent_notification.create
+      data:
+        message:
+          "Testmeddelande"

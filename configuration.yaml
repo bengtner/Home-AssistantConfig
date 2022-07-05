@@ -14,7 +14,7 @@ template:
             Off
           {% elif states('sensor.electricity_price_torngard_201')|float(0)
             > state_attr('sensor.electricity_price_torngard_201', 'avg_price')|float(0)
-            * (1.0 + (states('input_number.indata')|float(0))/100.0 ) %}
+            * (1.0 + (states('input_number.niva')|float(0))/100.0 ) %}
             Eco
           {% else %}
             Normal
