@@ -295,11 +295,12 @@
   mode: single
 
 - alias: stop_circulation_by_price
+  id: "195603042417"
   description: Stops circulation when energy price is too high
   trigger:
     - platform: state
       entity_id: sensor.electricity_price_torngard_201
-  condition: ->
+  condition: >-
     {{is_state('switch.poolcirculation','on')  and states('sensor.electricity_price_torngard_201')|float(0)
             > state_attr('sensor.electricity_price_torngard_201', 'avg_price')|float(0)
             * (1.0 + (states('input_number.niva')|float(0))/100.0 )}}
