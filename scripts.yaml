@@ -334,13 +334,7 @@ inform_blocked_badrum:
     - service: persistent_notification.create
       data:
         message: Bathroom script blocked
-ajust_heating:
-  sequence:
-    - service: persistent_notification.create
-      data:
-        message: Heating
-  mode: single
-  alias: Ajust
+
 
 set_pool_normal:
   sequence:
@@ -415,9 +409,6 @@ topup_circulation:
       target:
         entity_id:
           - input_text.circulation_time
-    - service: persistent_notification.create
-      data:
-        message: "Turn on circulation for {{ states('input_text.circulation_time')}}"
     - service: switch.turn_on
       target:
         entity_id:
@@ -441,9 +432,6 @@ circulation_on:
     target:
       entity_id:
         - input_text.circulation_time
-  - service: persistent_notification.create
-    data:
-      message: "Turn on circulation for {{ states('input_text.circulation_time')}}"
   - service: switch.turn_on
     target:
       entity_id:
