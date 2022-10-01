@@ -1,0 +1,25 @@
+
+battery_discharge_daily:
+  unique_id: "Battery charge and discharge daily"
+  name: "Battery charge and discharge daily"
+  source: sensor.battery_charge_and_discharge
+  net_consumption: true
+  cycle: daily
+battery_discharge_hourly:
+  unique_id: "Battery charge and discharge hourly"
+  name: "Battery charge and discharge hourly"
+  source: sensor.battery_charge_and_discharge
+  net_consumption: true
+  cycle: hourly
+electricity_cost_daily:
+  unique_id: "Electricity cost daily"
+  name: "Electricity cost daily"
+  source: sensor.electricity_cost
+  net_consumption: true
+  cycle: daily
+electricity_cost_hourly:
+  unique_id: "Electricity cost hourly"
+  name: "Electricity cost hourly"
+  source: sensor.electricity_cost
+  net_consumption: true
+  cycle: hourly
