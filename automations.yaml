@@ -110,6 +110,7 @@
   id: 669b2f3946694ce1b57a48c6dd0bcd18
   mode: single
 
+
 - id: "1650799729864"
   alias: Nybygget hemma
   description: "Sätter 'home' som preset mode i nybygget. "
@@ -136,7 +137,7 @@
         {% elif is_state('sensor.heating_level','Off') %} script.set_nybygget_off
         {% else %} script.set_heating_unknown
         {% endif %}
-#    - service: script.vv_nybygget_on
+  #    - service: script.vv_nybygget_on
   mode: single
 
 - id: "1650804270407"
@@ -165,7 +166,7 @@
         {% elif is_state('sensor.heating_level','Off') %} script.set_nybygget_off
         {% else %} script.set_heating_unknown
         {% endif %}
-#    - service: script.vv_nybygget_off
+  #    - service: script.vv_nybygget_off
   mode: single
 
 - alias: Gamla huset autoadjust
@@ -240,15 +241,31 @@
 - alias: Switch_on
   description: Turn switch on based on energy price
   trigger:
-  - platform: state
-    entity_id:
-    - sensor.heating_level
-    to: Normal
+    - platform: state
+      entity_id:
+        - sensor.heating_level
+      to: Normal
   action:
-    service: switch.turn_on
-    target:
-      entity_id: switch.IKEA_of_Sweden_TRADFRI_control_outlet_37da3ffe_on_off
+    - service: switch.turn_on
+      target:
+        entity_id:
+          - switch.ikea_of_sweden_tradfri_control_outlet_37da3ffe_on_off
+
   mode: single
+
+- alias: Switch_vv_on
+  description: Turn VV on based on energy price. Will just work if heating selector is set to Hemma
+  trigger:
+    - platform: state
+      entity_id:
+        - sensor.heating_level
+      to: Normal
+  condition: "{{is_state('input_select.heating_level','Hemma')}}"
+  action:
+    - service: switch.turn_on
+      target:
+        entity_id:
+          - switch.sonoff_1001464ae8
 
 - alias: Switch_off
   description: Turn switch off based on energy price
@@ -264,7 +281,24 @@
     service: switch.turn_off
     target:
       entity_id:
-        - switch.IKEA_of_Sweden_TRADFRI_control_outlet_37da3ffe_on_off
+        - switch.ikea_of_sweden_tradfri_control_outlet_37da3ffe_on_off
+  mode: single
+
+- alias: Switch_vv_off
+  description: Turn VV off based on energy price
+  trigger:
+    - platform: state
+      entity_id:
+        - sensor.heating_level
+      to:
+        - "Eco"
+        - "Off"
+  condition: []
+  action:
+    service: switch.turn_off
+    target:
+      entity_id:
+        - switch.sonoff_1001464ae8
   mode: single
 
 - alias: Circulation_top_up
@@ -301,10 +335,93 @@
     - platform: state
       entity_id: sensor.electricity_price_torngard_201
   condition: >-
-    {{is_state('switch.poolcirculation','on')  and states('sensor.electricity_price_torngard_201')|float(0)
+    {{is_state('switch.poolcirculation','on') and is_state('input_boolean.extra_circulation_active','off')  and states('sensor.electricity_price_torngard_201')|float(0)
             > state_attr('sensor.electricity_price_torngard_201', 'avg_price')|float(0)
             * (1.0 + (states('input_number.niva')|float(0))/100.0 )}}
   action:
     - service: script.circulation_off
   mode: single
 
+- alias: charge_battery
+  description: Will set battery to charging mode
+  trigger:
+    - platform: state
+      entity_id: input_select.battery_mode
+      to: "Charge"
+  action:
+    - service: select.select_option
+      target:
+        entity_id: select.battery_working_mode
+      data:
+        option: "Time Of Use"
+    - service: number.set_value
+      target:
+        entity_id:
+          - number.battery_maximum_charging_power
+          - number.battery_maximum_discharging_power
+      data:
+        value: 2500
+  mode: single
+
+- alias: discharge_battery
+  description: Will set battery to discharging mode
+  trigger:
+    - platform: state
+      entity_id: input_select.battery_mode
+      to: "Discharge"
+  action:
+    - service: select.select_option
+      target:
+        entity_id: select.battery_working_mode
+      data:
+        option: "Fully Fed To Grid"
+    - service: number.set_value
+      target:
+        entity_id:
+          - number.battery_maximum_charging_power
+          - number.battery_maximum_discharging_power
+      data:
+        value: 2500
+  mode: single
+
+- alias: topup_battery
+  description: Maximize Self Consumption. Will load battery from solar panels only
+  trigger:
+    - platform: state
+      entity_id: input_select.battery_mode
+      to: "Selfconsumption"
+  action:
+    - service: select.select_option
+      target:
+        entity_id: select.battery_working_mode
+      data:
+        option: "Maximise Self Consumption"
+    - service: number.set_value
+      target:
+        entity_id:
+          - number.battery_maximum_charging_power
+          - number.battery_maximum_discharging_power
+      data:
+        value: 2500
+  mode: single
+
+- alias: idle_battery
+  description: Will keep battery idle by setting max_charge/discharge_power to 0
+  trigger:
+    - platform: state
+      entity_id: input_select.battery_mode
+      to: "Idle"
+  action:
+    - service: input_select.select_option
+      target:
+        entity_id: select.battery_working_mode
+      data:
+        option: "Maximise Self Consumption"
+    - service: number.set_value
+      target:
+        entity_id:
+          - number.battery_maximum_charging_power
+          - number.battery_maximum_discharging_power
+      data:
+        value: 0
+  mode: single

@@ -1,4 +1,5 @@
 # Configure a default setup of Home Assistant (frontend, api, etc)
+
 default_config:
 
 # Text to speech
@@ -9,22 +10,52 @@ cloud:
 template:
   - sensor:
       - name: "Heating level"
-        state: >
-          {% if states('sensor.electricity_price_torngard_201')|float(0) > states('input_number.max_pris')|float(0) %}
-            Off
-          {% elif states('sensor.electricity_price_torngard_201')|float(0)
-            > state_attr('sensor.electricity_price_torngard_201', 'avg_price')|float(0)
-            * (1.0 + (states('input_number.niva')|float(0))/100.0 ) %}
-            Eco
-          {% else %}
-            Normal
-          {% endif %}
+        state: "Normal"
+#          {% if states('sensor.electricity_price_torngard_201')|float(0) > states('input_number.max_pris')|float(0) %}
+#            Off
+#          {% elif states('sensor.electricity_price_torngard_201')|float(0)
+#            > state_attr('sensor.electricity_price_torngard_201', 'avg_price')|float(0)
+#            * (1.0 + (states('input_number.niva')|float(0))/100.0 ) %}
+#            Eco
+#          {% else %}
+#            Normal
+#          {% endif %}
       - name: "Pool circulation all"
         state: >
           {% if is_state('switch.poolcirculation','on') or is_state('switch.poolheating','on') %}
-            on
+            on 
           {% else %}
             off
+          {% endif %}
+      - name: "Water fill daily minutes"
+        state: >
+          {% set hours = states('sensor.waterfill_daily') | float %} 
+          {% set minutes = ((hours % 1) * 60) | int %}  
+          {% set hours = (hours - (hours % 1)) | int %}  
+          {{ (hours*60 + minutes) | int }}
+
+
+      - name: "Battery charge and discharge"
+        unique_id: "Battery charge and discharge"
+        device_class: "monetary"
+        unit_of_measurement: "SEK"
+        state: >
+          {% set netcost= 0.70 %}
+          {% if states('sensor.battery_charge_discharge_power')|float(0) > 0 %}
+          {{states('sensor.battery_charge_discharge_power')|float(0)*(states('sensor.electricity_price_torngard_201')|float(0)+ netcost)/1000.0}}
+          {% else %}
+          {{states('sensor.battery_charge_discharge_power')|float(0)*states('sensor.electricity_price_torngard_201')|float(0)/1000.0}}
+          {% endif %}
+      - name: "Instant cost of electricity"
+        unique_id: "Instant cost of electricity"
+        device_class: "monetary"
+        unit_of_measurement: "SEK"
+        state: >
+          {% set netcost= 0.70 %}
+          {% if states('sensor.power_meter_active_power')|float(0) < 0 %}
+          {{states('sensor.power_meter_active_power')|float(0)*(states('sensor.electricity_price_torngard_201')|float(0)+netcost)/1000.0}}
+          {% else %}
+          {{states('sensor.power_meter_active_power')|float(0)*states('sensor.electricity_price_torngard_201')|float(0)/1000.0}}
           {% endif %}
 sensor:
   - platform: history_stats
@@ -40,20 +71,36 @@ sensor:
     state: "on"
     type: time
     start: "{{ now().replace(hour=0, minute=0, second=0) }}"
-    end: "{{ now() }}"          
+    end: "{{ now() }}"
   - platform: history_stats
     name: Watercirculation daily
     entity_id: sensor.pool_circulation_all
     state: "on"
     type: time
     start: "{{ now().replace(hour=0, minute=0, second=0) }}"
-    end: "{{ now() }}"   
+    end: "{{ now() }}"
   - platform: filter
     name: "Filtered low water"
     entity_id: binary_sensor.poolwaterlevel
     filters:
       - filter: time_throttle
         window_size: "0:10"
+  - platform: integration
+    source: sensor.battery_charge_and_discharge
+    name: Charge and discharge of battery
+    unique_id: "Charge and discharge of battery"
+    unit_time: h
+    method: "left"
+    #    unit_prefix: k
+    round: 2
+  - platform: integration
+    source: sensor.instant_cost_of_electricity
+    name: Electricity cost
+    unique_id: "Electricity cost"
+    unit_time: h
+    method: "left"
+    #    unit_prefix: k
+    round: 2
 
 climate:
   - platform: simple_thermostat
@@ -207,6 +254,7 @@ climate:
       minutes: 10
     initial_hvac_mode: "heat"
     precision: 0.5
+
 switch:
   - platform: group
     name: "Värmegolv"
@@ -217,6 +265,8 @@ switch:
       - switch.kok
       - switch.uterum
       - switch.hall
+
 automation: !include automations.yaml
 script: !include scripts.yaml
 scene: !include scenes.yaml
+utility_meter: !include utility_meter.yaml

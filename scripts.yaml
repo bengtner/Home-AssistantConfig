@@ -6,11 +6,11 @@ set_daikin_normal:
           == 'none' %} {{(states.climate.daikin_gamla_huset.attributes.temperature|float(0)
           + states('input_number.eco_sankning')|float(0))}} {% else %} {{(states.climate.daikin_gamla_huset.attributes.temperature|float(0))}}
           {% endif %}"
-    - service: persistent_notification.create
-      data:
-        message:
-          "Set Daikin Normal. Preset mode: {{states.climate.daikin_gamla_huset.attributes.preset_mode}}.
-          Temperature: {{setpoint_std}}"
+#    - service: persistent_notification.create
+#      data:
+#        message:
+#          "Set Daikin Normal. Preset mode: {{states.climate.daikin_gamla_huset.attributes.preset_mode}}.
+#          Temperature: {{setpoint_std}}"
     - service: climate.set_preset_mode
       target:
         entity_id: climate.daikin_gamla_huset
@@ -39,11 +39,11 @@ set_daikin_eco:
           {{(states.climate.daikin_gamla_huset.attributes.temperature|float(0) - states('input_number.eco_sankning')|float(0))}}
           {% else  %} {{(states.climate.daikin_gamla_huset.attributes.temperature|float(0))}}
           {% endif %} "
-    - service: persistent_notification.create
-      data:
-        message:
-          "Set Daikin Eko. Preset mode: {{states.climate.daikin_gamla_huset.attributes.preset_mode}}.
-          Temperature: {{setpoint_eco}}"
+#    - service: persistent_notification.create
+#      data:
+#        message:
+#          "Set Daikin Eko. Preset mode: {{states.climate.daikin_gamla_huset.attributes.preset_mode}}.
+#          Temperature: {{setpoint_eco}}"
     - service: climate.set_preset_mode
       target:
         entity_id: climate.daikin_gamla_huset
@@ -82,9 +82,9 @@ set_daikin_off:
         entity_id: climate.daikin_gamla_huset
       data:
         hvac_mode: "off"
-    - service: persistent_notification.create
-      data:
-        message: "Set Daikin Off. Preset mode: {{states.climate.daikin_gamla_huset.attributes.preset_mode}}. "
+#    - service: persistent_notification.create
+#      data:
+#        message: "Set Daikin Off. Preset mode: {{states.climate.daikin_gamla_huset.attributes.preset_mode}}. "
 set_nybygget_normal:
   sequence:
     - service: climate.set_preset_mode
@@ -118,10 +118,10 @@ set_nybygget_normal:
       target:
         entity_id:
           - input_boolean.offbyprice_nybygget
-    - service: >-
-        {% if is_state('input_select.heating_level','Hemma') and is_state('sensor.heating_level','Normal') %} script.vv_nybygget_on 
-        {%else%} script.vv_nybygget_off
-        {%endif %}
+#    - service: >-
+#        {% if is_state('input_select.heating_level','Hemma') and is_state('sensor.heating_level','Normal') %} script.vv_nybygget_on 
+#        {%else%} script.vv_nybygget_off
+#        {%endif %}
 
 set_nybygget_eco:
   sequence:
@@ -413,6 +413,10 @@ topup_circulation:
       target:
         entity_id:
           - switch.poolcirculation
+    - service: input_boolean.turn_on
+      target:
+        entity_id:
+          - input_boolean.extra_circulation_active
 
 circulation_on:
   sequence:
@@ -443,19 +447,23 @@ circulation_off:
       target:
         entity_id:
           - switch.poolcirculation
+    - service: input_boolean.turn_off
+      target:
+        entity_id:
+          - input_boolean.extra_circulation_active
 
-vv_nybygget_off:
-  sequence:
-    - service: switch.turn_off
-      target:
-        entity_id:
-          - switch.sonoff_1001464ae8
-vv_nybygget_on:
-  sequence:
-    - service: switch.turn_on
-      target:
-        entity_id:
-          - switch.sonoff_1001464ae8
+# vv_nybygget_off:
+#  sequence:
+#    - service: switch.turn_off
+#      target:
+#        entity_id:
+#          - switch.sonoff_1001464ae8
+#vv_nybygget_on:
+#  sequence:
+#    - service: switch.turn_on
+#      target:
+#        entity_id:
+#          - switch.sonoff_1001464ae8
 test_message:
   sequence:
     - service: >-
