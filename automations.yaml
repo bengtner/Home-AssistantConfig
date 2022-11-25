@@ -7,10 +7,18 @@
       offset: 0
   condition: []
   action:
-    - type: turn_on
-      device_id: 481b93ddde78677acb0b9b2aa6dabafd
-      entity_id: switch.utebelysning
-      domain: switch
+    - service: switch.turn_on
+      #      device_id: 481b93ddde78677acb0b9b2aa6dabafd
+      target:
+        entity_id:
+          - switch.utebelysning
+          - switch.ikea_of_sweden_tradfri_control_outlet_switch
+          - switch.ikea_of_sweden_tradfri_control_outlet_switch_2
+          - switch.0x84b4dbfffe9776be
+          - switch.advent_1
+          - switch.0x847127fffebb0a2a
+  #   service   domain: switch
+
   mode: single
 - id: "1647539027785"
   alias: Släck
@@ -23,10 +31,17 @@
       offset: 0
   condition: []
   action:
-    - type: turn_off
-      device_id: 481b93ddde78677acb0b9b2aa6dabafd
-      entity_id: switch.utebelysning
-      domain: switch
+    - service: switch.turn_off
+      #      device_id: 481b93ddde78677acb0b9b2aa6dabafd
+      target:
+        entity_id:
+          - switch.utebelysning
+          - switch.ikea_of_sweden_tradfri_control_outlet_switch
+          - switch.ikea_of_sweden_tradfri_control_outlet_switch_2
+          - switch.0x84b4dbfffe9776be
+          - switch.advent_1
+          - switch.0x847127fffebb0a2a
+  #      domain: switch
   mode: single
 
 - id: "1647539238847"
@@ -40,10 +55,17 @@
       before: sunrise
       after: sunset
   action:
-    - type: turn_on
-      device_id: 481b93ddde78677acb0b9b2aa6dabafd
-      entity_id: switch.utebelysning
-      domain: switch
+    - service: switch.turn_on
+      #      device_id: 481b93ddde78677acb0b9b2aa6dabafd
+      target:
+        entity_id:
+          - switch.utebelysning
+          - switch.ikea_of_sweden_tradfri_control_outlet_switch
+          - switch.ikea_of_sweden_tradfri_control_outlet_switch_2
+          - switch.0x84b4dbfffe9776be
+          - switch.advent_1
+          - switch.0x847127fffebb0a2a
+  #      domain: switch
   mode: single
 
 - alias: Daikin autoadjust
@@ -108,6 +130,64 @@
       {% else %} script.set_heating_unknown
       {% endif %}
   id: 669b2f3946694ce1b57a48c6dd0bcd18
+  mode: single
+
+- alias: Elvärme autoon
+  description: Will turn on depending on price
+  trigger:
+    - platform: state
+      entity_id: sensor.heating_level
+      to: Normal
+  condition: "{{is_state('input_select.styr_elvarme','Elpris')}}"
+  action:
+    service: switch.turn_on
+    target:
+      entity_id: switch.elradiatorer
+  id: "Elvärme autoon"
+  mode: single
+
+- alias: Elvärme autooff
+  description: Will turn off depending on price
+  trigger:
+    - platform: state
+      entity_id: sensor.heating_level
+      to:
+        - "Eco"
+        - "Off"
+  condition: "{{is_state('input_select.styr_elvarme','Elpris')}}"
+  action:
+    service: switch.turn_off
+    target:
+      entity_id: switch.elradiatorer
+  id: "Elvärme autooff"
+  mode: single
+
+- alias: Elvärme on
+  description: Will turn heaters on
+  trigger:
+    - platform: state
+      entity_id: input_select.styr_elvarme
+      to: "På"
+  condition: []
+  action:
+    service: switch.turn_on
+    target:
+      entity_id: switch.elradiatorer
+  id: "Elvärme on"
+  mode: single
+
+- alias: Elvärme off
+  description: Will turn heaters off
+  trigger:
+    - platform: state
+      entity_id: input_select.styr_elvarme
+      to: "Av"
+  condition: []
+  action:
+    service: switch.turn_off
+    target:
+      entity_id: switch.elradiatorer
+  id: "Elvärme off"
   mode: single
 
 
@@ -424,4 +504,15 @@
           - number.battery_maximum_discharging_power
       data:
         value: 0
+  mode: single
+
+- alias: Växtljus_on_off
+  trigger:
+    - platform: state
+      entity_id: schedule.vaxtljus
+  condition: "{{ trigger.to_state.state in ['on', 'off'] }}"
+  action:
+    - service: "switch.turn_{{ trigger.to_state.state }}"
+      target:
+        entity_id: switch.0x385b44fffe19f380
   mode: single
