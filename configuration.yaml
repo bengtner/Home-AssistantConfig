@@ -7,19 +7,36 @@ tts:
   - platform: google_translate
 cloud:
 
+# timers
+timer:
+  vattenaltan:
+  vattenvaxthus: 
+#    duration: {{(60*states('input_number.vattenvaxthus')|int)|timestamp_custom("%H:%M:%S",0)}}
+
 template:
   - sensor:
       - name: "Heating level"
         state: "Normal"
-#          {% if states('sensor.electricity_price_torngard_201')|float(0) > states('input_number.max_pris')|float(0) %}
-#            Off
-#          {% elif states('sensor.electricity_price_torngard_201')|float(0)
-#            > state_attr('sensor.electricity_price_torngard_201', 'avg_price')|float(0)
-#            * (1.0 + (states('input_number.niva')|float(0))/100.0 ) %}
-#            Eco
-#          {% else %}
-#            Normal
-#          {% endif %}
+      #          {% if states('sensor.electricity_price_torngard_201')|float(0) > states('input_number.max_pris')|float(0) %}
+      #            Off
+      #          {% elif states('sensor.electricity_price_torngard_201')|float(0)
+      #            > state_attr('sensor.electricity_price_torngard_201', 'avg_price')|float(0)
+      #            * (1.0 + (states('input_number.niva')|float(0))/100.0 ) %}
+      #            Eco
+      #          {% else %}
+      #            Normal
+      #          {% endif %}
+      #- name: "Hour"
+      #  state: "{{ as_timestamp(states('sensor.date_time_iso')) | timestamp_custom('%H') }}"
+      #  icon: "mdi:calendar-clock"
+      - name: "Sun power"
+        state: >
+          {% if states('sensor.nordpool')|float(0) < (state_attr('sensor.nordpool','average')|float(0) + states('input_number.fees')|float(0)/100 +states('input_number.natavgift')|float(0)/100)*1.25 and states('sensor.inverter_active_power')|float(0) > 500 %}
+            on
+          {% else %}
+            off
+          {% endif %}
+          
       - name: "Pool circulation all"
         state: >
           {% if is_state('switch.poolcirculation','on') or is_state('switch.poolheating','on') %}
@@ -33,7 +50,6 @@ template:
           {% set minutes = ((hours % 1) * 60) | int %}  
           {% set hours = (hours - (hours % 1)) | int %}  
           {{ (hours*60 + minutes) | int }}
-
 
       - name: "Battery charge and discharge"
         unique_id: "Battery charge and discharge"
@@ -57,7 +73,28 @@ template:
           {% else %}
           {{states('sensor.power_meter_active_power')|float(0)*states('sensor.electricity_price_torngard_201')|float(0)/1000.0}}
           {% endif %}
+      - name: "Instant value self consumption"
+        unique_id: "Instant value self consumption"
+        device_class: "monetary"
+        unit_of_measurement: "SEK"
+        state: >
+          {%if states('sensor.power_meter_active_power')|float(0) > 0  and states('sensor.inverter_active_power')|float(0) > 0 %}
+          {{(states('sensor.inverter_active_power')|float(0) - states('sensor.power_meter_active_power')|float(0))*states('sensor.electricity_price_torngard_201')|float(0)/1000.0  }}
+          {% elif states('sensor.inverter_active_power')|float(0) > 0 %}
+          {{states('sensor.inverter_active_power')|float(0)*states('sensor.electricity_price_torngard_201')|float(0)/1000.0  }}
+          {% else %}
+          0.0
+          {%endif %}
+
 sensor:
+  #- platform: time_date
+  #  display_options:
+  #    - "date"
+  #    - "time"
+  #    - "date_time_iso"
+
+  - platform: nordpool
+    region: "SE4" 
   - platform: history_stats
     name: Poolheating daily
     entity_id: switch.poolheating
@@ -123,7 +160,7 @@ climate:
   - platform: simple_thermostat
     name: Badrum gamla huset
     heater: light.golvvarme_badrum_on_off
-    target_sensor: sensor.badrum_temperature
+    target_sensor: sensor.lumi_lumi_weather_temperature
     min_temp: 0.0
     max_temp: 25.0
     #    target_temp: 5.0

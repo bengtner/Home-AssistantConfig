@@ -1,473 +1,342 @@
-set_daikin_normal:
-  sequence:
-    - variables:
-        setpoint_std:
-          "{% if not state_attr('climate.daikin_gamla_huset', 'preset_mode')
-          == 'none' %} {{(states.climate.daikin_gamla_huset.attributes.temperature|float(0)
-          + states('input_number.eco_sankning')|float(0))}} {% else %} {{(states.climate.daikin_gamla_huset.attributes.temperature|float(0))}}
-          {% endif %}"
-#    - service: persistent_notification.create
-#      data:
-#        message:
-#          "Set Daikin Normal. Preset mode: {{states.climate.daikin_gamla_huset.attributes.preset_mode}}.
-#          Temperature: {{setpoint_std}}"
-    - service: climate.set_preset_mode
-      target:
-        entity_id: climate.daikin_gamla_huset
-      data:
-        preset_mode: none
-    - service: climate.set_temperature
-      target:
-        entity_id: climate.daikin_gamla_huset
-      data:
-        temperature: "{{setpoint_std}}"
-        hvac_mode: heat
-    - service: input_boolean.turn_off
-      target:
-        entity_id:
-          - input_boolean.offbyprice_daikin
-    - service: input_boolean.turn_off
-      target:
-        entity_id:
-          - input_boolean.eco_daikin
-set_daikin_eco:
-  sequence:
-    - variables:
-        setpoint_eco:
-          "{% if is_state('input_boolean.eco_daikin','on')  %} {{(states.climate.daikin_gamla_huset.attributes.temperature|float(0))}}
-          {% elif state_attr('climate.daikin_gamla_huset', 'preset_mode') == 'none' %}
-          {{(states.climate.daikin_gamla_huset.attributes.temperature|float(0) - states('input_number.eco_sankning')|float(0))}}
-          {% else  %} {{(states.climate.daikin_gamla_huset.attributes.temperature|float(0))}}
-          {% endif %} "
-#    - service: persistent_notification.create
-#      data:
-#        message:
-#          "Set Daikin Eko. Preset mode: {{states.climate.daikin_gamla_huset.attributes.preset_mode}}.
-#          Temperature: {{setpoint_eco}}"
-    - service: climate.set_preset_mode
-      target:
-        entity_id: climate.daikin_gamla_huset
-      data:
-        preset_mode: eco
-    - service: climate.set_temperature
-      target:
-        entity_id: climate.daikin_gamla_huset
-      data:
-        temperature: "{{setpoint_eco}}"
-        hvac_mode: heat
-    - service: input_boolean.turn_off
-      target:
-        entity_id:
-          - input_boolean.offbyprice_daikin
-    - service: input_boolean.turn_off
-      target:
-        entity_id:
-          - input_boolean.eco_daikin
-set_daikin_off:
-  sequence:
-    - service:
-        "{% if not is_state_attr('climate.daikin_gamla_huset', 'hvac_action', 'off')  %}
-        input_boolean.turn_on {% else %} input_boolean.turn_off {% endif %}"
-      target:
-        entity_id:
-          - input_boolean.offbyprice_daikin
-    - service:
-        "{% if is_state_attr('climate.daikin_gamla_huset', 'preset_mode', 'eco')  %}
-        input_boolean.turn_on {% else %} input_boolean.turn_off {% endif %}"
-      target:
-        entity_id:
-          - input_boolean.eco_daikin
-    - service: climate.set_hvac_mode
-      target:
-        entity_id: climate.daikin_gamla_huset
-      data:
-        hvac_mode: "off"
-#    - service: persistent_notification.create
-#      data:
-#        message: "Set Daikin Off. Preset mode: {{states.climate.daikin_gamla_huset.attributes.preset_mode}}. "
 set_nybygget_normal:
   sequence:
-    - service: climate.set_preset_mode
-      target:
-        entity_id:
-          - climate.sovrum_nb
-          - climate.sovrum_plan2
-          - climate.hall
-          - climate.kok
-          - climate.storstuga
-          - climate.badrum
-          - climate.uterum
-      data:
-        preset_mode:
-          "{%if is_state('input_select.heating_level', 'Hemma')  %} home
-          {%elif is_state('input_select.heating_level', 'Borta') %} away {%elif
-          is_state('input_select.heating_level',  'Extra') %} boost {%endif %}"
-    - service: climate.set_hvac_mode
-      target:
-        entity_id:
-          - climate.sovrum_nb
-          - climate.sovrum_plan2
-          - climate.hall
-          - climate.kok
-          - climate.storstuga
-          - climate.badrum
-          - climate.uterum
-      data:
-        hvac_mode: heat
-    - service: input_boolean.turn_off
-      target:
-        entity_id:
-          - input_boolean.offbyprice_nybygget
-#    - service: >-
-#        {% if is_state('input_select.heating_level','Hemma') and is_state('sensor.heating_level','Normal') %} script.vv_nybygget_on 
-#        {%else%} script.vv_nybygget_off
-#        {%endif %}
-
-set_nybygget_eco:
-  sequence:
-    - variables:
-        temp_sovrum_nb: "{%if is_state_attr('climate.sovrum_nb',  'preset_mode',
-          'eco') %} {{states.climate.sovrum_nb.attributes.temperature}} {% else %}
-          {{states.climate.sovrum_nb.attributes.temperature | float(0) - states('input_number.nybygget_sovrum_nb_eco_sankning')|float(0)}}
-          {% endif %}        "
-        temp_sovrum_plan2:
-          "{%if is_state_attr('climate.sovrum_plan2',  'preset_mode',
-          'eco') %} {{states.climate.sovrum_plan2.attributes.temperature}} {% else
-          %} {{states.climate.sovrum_plan2.attributes.temperature | float(0) - states('input_number.nybygget_sovrum_plan2_eco_sankning')|float(0)}}
-          {% endif %}        "
-        temp_hall: "{%if is_state_attr('climate.hall',  'preset_mode', 'eco')
-          %} {{states.climate.hall.attributes.temperature}} {% else %} {{states.climate.hall.attributes.temperature
-          | float(0) - states('input_number.nybygget_hall_eco_sankning')|float(0)}}
-          {% endif %}          "
-        temp_kok: "{%if is_state_attr('climate.kok',  'preset_mode', 'eco') %}
-          {{states.climate.kok.attributes.temperature}} {% else %} {{states.climate.kok.attributes.temperature
-          | float(0) - states('input_number.nybygget_kok_eco_sankning')|float(0)}}
-          {% endif %}  "
-        temp_storstuga: "{%if is_state_attr('climate.storstuga',  'preset_mode',
-          'eco') %} {{states.climate.storstuga.attributes.temperature}} {% else %}
-          {{states.climate.storstuga.attributes.temperature | float(0) - states('input_number.nybygget_storstuga_eco_sankning')|float(0)}}
-          {% endif %}  "
-        temp_badrum:
-          "{%if is_state_attr('climate.badrum',  'preset_mode', 'eco')
-          %} {{states.climate.badrum.attributes.temperature}} {% else %} {{states.climate.badrum.attributes.temperature
-          | float(0) - states('input_number.nybygget_badrum_eco_sankning')|float(0)}}
-          {% endif %}  "
-        temp_uterum:
-          "{%if is_state_attr('climate.uterum',  'preset_mode', 'eco')
-          %} {{states.climate.uterum.attributes.temperature}} {% else %} {{states.climate.uterum.attributes.temperature
-          | float(0) - states('input_number.nybygget_uterum_eco_sankning')|float(0)}}
-          {% endif %}  "
-    - service: climate.set_preset_mode
-      target:
-        entity_id:
-          - climate.sovrum_nb
-          - climate.sovrum_plan2
-          - climate.hall
-          - climate.kok
-          - climate.storstuga
-          - climate.badrum
-          - climate.uterum
-      data:
-        preset_mode: eco
-    - service: climate.set_temperature
-      target:
-        entity_id:
-          - climate.sovrum_nb
-      data:
-        temperature: "{{temp_sovrum_nb}}"
-    - service: climate.set_temperature
-      target:
-        entity_id:
-          - climate.sovrum_plan2
-      data:
-        temperature: "{{temp_sovrum_plan2}}"
-    - service: climate.set_temperature
-      target:
-        entity_id:
-          - climate.hall
-      data:
-        temperature: "{{temp_hall}}"
-    - service: climate.set_temperature
-      target:
-        entity_id:
-          - climate.kok
-      data:
-        temperature: "{{temp_kok}}"
-    - service: climate.set_temperature
-      target:
-        entity_id:
-          - climate.storstuga
-      data:
-        temperature: "{{temp_storstuga}}"
-    - service: climate.set_temperature
-      target:
-        entity_id:
-          - climate.badrum
-      data:
-        temperature: "{{temp_badrum}}"
-    - service: climate.set_temperature
-      target:
-        entity_id:
-          - climate.uterum
-      data:
-        temperature: "{{temp_uterum}}"
-    - service: climate.set_hvac_mode
-      target:
-        entity_id:
-          - climate.sovrum_nb
-          - climate.sovrum_plan2
-          - climate.hall
-          - climate.kok
-          - climate.storstuga
-          - climate.badrum
-          - climate.uterum
-      data:
-        hvac_mode: heat
-    - service: input_boolean.turn_off
-      target:
-        entity_id:
-          - input_boolean.offbyprice_nybygget
-set_nybygget_off:
-  sequence:
-    - service:
-        "{% if not is_state_attr('climate.storstuga', 'hvac_action', 'off')  %}
-        input_boolean.turn_on {% else %} input_boolean.turn_off {% endif %}"
-      target:
-        entity_id:
-          - input_boolean.offbyprice_nybygget
-    - service: climate.set_hvac_mode
-      target:
-        entity_id:
-          - climate.sovrum_nb
-          - climate.sovrum_plan2
-          - climate.hall
-          - climate.kok
-          - climate.storstuga
-          - climate.badrum
-          - climate.uterum
-      data:
-        hvac_mode: "off"
-    - service: switch.turn_off
-      target:
-        entity_id:
-          - switch.sonoff_1001464ae8
-set_gamla_huset_normal:
-  sequence:
-    - service: climate.set_preset_mode
-      target:
-        entity_id:
-          - climate.badrum_gamla_huset
-      data:
-        preset_mode:
-          "{%if is_state('input_select.gamla_huset_varmelage', 'Hemma')  %}
-          home {%elif is_state('input_select.gamla_huset_varmelage', 'Borta') %}
-          away {%elif is_state('input_select.gamla_huset_varmelage',  'Extra') %}
-          boost {%endif %}"
-    - service: climate.set_hvac_mode
-      target:
-        entity_id:
-          - climate.badrum_gamla_huset
-      data:
-        hvac_mode: heat
-    - service: input_boolean.turn_off
-      target:
-        entity_id:
-          - input_boolean.offbyprice_gamla_huset
-set_gamla_huset_eco:
-  sequence:
-    - variables:
-        temp_badrum_gamla_huset:
-          "{%if is_state_attr('climate.badrum_gamla_huset',
-          'preset_mode', 'eco') %} {{states.climate.badrum_gamla_huset.attributes.temperature}}
-          {% else %} {{states.climate.badrum_gamla_huset.attributes.temperature | float(0)
-          - states('input_number.gamla_huset_badrum_eco_sankning')|float(0)}} {% endif
-          %}"
-    - service: climate.set_preset_mode
-      target:
-        entity_id:
-          - climate.badrum_gamla_huset
-      data:
-        preset_mode: eco
-    - service: climate.set_temperature
-      target:
-        entity_id:
-          - climate.badrum_gamla_huset
-      data:
-        temperature: "{{temp_badrum_gamla_huset}}"
-    - service: climate.set_hvac_mode
-      target:
-        entity_id:
-          - climate.badrum_gamla_huset
-      data:
-        hvac_mode: heat
-    - service: input_boolean.turn_off
-      target:
-        entity_id:
-          - input_boolean.offbyprice_gamla_huset
-set_gamla_huset_off:
-  sequence:
-    - service:
-        "{% if not is_state_attr('climate.badrum_gamla_huset', 'hvac_action',
-        'off')  %} input_boolean.turn_on {% else %} input_boolean.turn_off {% endif
-        %}"
-      target:
-        entity_id:
-          - input_boolean.offbyprice_gamla_huset
-    - service: climate.set_hvac_mode
-      target:
-        entity_id:
-          - climate.badrum_gamla_huset
-      data:
-        hvac_mode: "off"
-set_heating_unknown:
-  sequence:
-    - service: persistent_notification.create
-      data:
-        message: Illegal heating level
-inform_blocked_nybygget:
-  sequence:
-    - service: persistent_notification.create
-      data:
-        message: Nybygget script blocked
-inform_blocked_badrum:
-  sequence:
-    - service: persistent_notification.create
-      data:
-        message: Bathroom script blocked
-
-
-set_pool_normal:
-  sequence:
-    - service: climate.set_preset_mode
-      target:
-        entity_id:
-          - climate.pool
-      data:
-        preset_mode: home
-    - service: climate.set_hvac_mode
-      target:
-        entity_id:
-          - climate.pool
-      data:
-        hvac_mode: heat
-    - service: input_boolean.turn_off
-      target:
-        entity_id:
-          - input_boolean.offbyprice_pool
-set_pool_eco:
-  sequence:
-    - variables:
-        temp_pool:
-          "{%if is_state_attr('climate.pool',
-          'preset_mode', 'eco') %} {{states.climate.pool.attributes.temperature}}
-          {% else %} {{states.climate.pool.attributes.temperature | float(0)
-          - states('input_number.eco_pool')|float(0)}} {% endif
-          %}"
-    - service: climate.set_preset_mode
-      target:
-        entity_id:
-          - climate.pool
-      data:
-        preset_mode: eco
-    - service: climate.set_temperature
-      target:
-        entity_id:
-          - climate.pool
-      data:
-        temperature: "{{temp_pool}}"
-    - service: climate.set_hvac_mode
-      target:
-        entity_id:
-          - climate.pool
-      data:
-        hvac_mode: heat
-    - service: input_boolean.turn_off
-      target:
-        entity_id:
-          - input_boolean.offbyprice_pool
-set_pool_off:
-  sequence:
-    - service:
-        "{% if not is_state_attr('climate.pool', 'hvac_action',
-        'off')  %} input_boolean.turn_on {% else %} input_boolean.turn_off {% endif
-        %}"
-      target:
-        entity_id:
-          - input_boolean.offbyprice_pool
-    - service: climate.set_hvac_mode
-      target:
-        entity_id:
-          - climate.pool
-      data:
-        hvac_mode: "off"
-topup_circulation:
-  sequence:
-    - service:
-        input_text.set_value
-      data: 
-        value: "1:00:00"
-      target:
-        entity_id:
-          - input_text.circulation_time
-    - service: switch.turn_on
-      target:
-        entity_id:
-          - switch.poolcirculation
-    - service: input_boolean.turn_on
-      target:
-        entity_id:
-          - input_boolean.extra_circulation_active
-
-circulation_on:
-  sequence:
-  - variables:
-      ontime: >-
-        {% set diff = states('input_number.daily_circulation') | float(0) - 
-        states('sensor.watercirculation_daily') | float(0) %}
-        {% if diff > 0 %}
-        {{ diff }}
-        {% else %}
-        0 
-        {% endif %}
-  - service:
-      input_text.set_value
-    data: 
-      value: "{{ ontime | int }}:{{ ((ontime - ontime | int)*60)  | int }}:00"
+  - service: climate.set_preset_mode
     target:
       entity_id:
-        - input_text.circulation_time
+      - climate.sovrum_nb
+      - climate.sovrum_plan2
+      - climate.hall
+      - climate.kok
+      - climate.storstuga
+      - climate.badrum
+      - climate.uterum
+    data:
+      preset_mode: '{%if is_state(''input_select.heating_level'', ''Hemma'')  %} home
+        {%elif is_state(''input_select.heating_level'', ''Borta'') %} away {%elif
+        is_state(''input_select.heating_level'',  ''Extra'') %} boost {%endif %}'
+  - service: climate.set_hvac_mode
+    target:
+      entity_id:
+      - climate.sovrum_nb
+      - climate.sovrum_plan2
+      - climate.hall
+      - climate.kok
+      - climate.storstuga
+      - climate.badrum
+      - climate.uterum
+    data:
+      hvac_mode: heat
+  - service: input_boolean.turn_off
+    target:
+      entity_id:
+      - input_boolean.offbyprice_nybygget
+set_nybygget_eco:
+  sequence:
+  - variables:
+      temp_sovrum_nb: '{%if is_state_attr(''climate.sovrum_nb'',  ''preset_mode'',
+        ''eco'') %} {{states.climate.sovrum_nb.attributes.temperature}} {% else %}
+        {{states.climate.sovrum_nb.attributes.temperature | float(0) - states(''input_number.nybygget_sovrum_nb_eco_sankning'')|float(0)}}
+        {% endif %}        '
+      temp_sovrum_plan2: '{%if is_state_attr(''climate.sovrum_plan2'',  ''preset_mode'',
+        ''eco'') %} {{states.climate.sovrum_plan2.attributes.temperature}} {% else
+        %} {{states.climate.sovrum_plan2.attributes.temperature | float(0) - states(''input_number.nybygget_sovrum_plan2_eco_sankning'')|float(0)}}
+        {% endif %}        '
+      temp_hall: '{%if is_state_attr(''climate.hall'',  ''preset_mode'', ''eco'')
+        %} {{states.climate.hall.attributes.temperature}} {% else %} {{states.climate.hall.attributes.temperature
+        | float(0) - states(''input_number.nybygget_hall_eco_sankning'')|float(0)}}
+        {% endif %}          '
+      temp_kok: '{%if is_state_attr(''climate.kok'',  ''preset_mode'', ''eco'') %}
+        {{states.climate.kok.attributes.temperature}} {% else %} {{states.climate.kok.attributes.temperature
+        | float(0) - states(''input_number.nybygget_kok_eco_sankning'')|float(0)}}
+        {% endif %}  '
+      temp_storstuga: '{%if is_state_attr(''climate.storstuga'',  ''preset_mode'',
+        ''eco'') %} {{states.climate.storstuga.attributes.temperature}} {% else %}
+        {{states.climate.storstuga.attributes.temperature | float(0) - states(''input_number.nybygget_storstuga_eco_sankning'')|float(0)}}
+        {% endif %}  '
+      temp_badrum: '{%if is_state_attr(''climate.badrum'',  ''preset_mode'', ''eco'')
+        %} {{states.climate.badrum.attributes.temperature}} {% else %} {{states.climate.badrum.attributes.temperature
+        | float(0) - states(''input_number.nybygget_badrum_eco_sankning'')|float(0)}}
+        {% endif %}  '
+      temp_uterum: '{%if is_state_attr(''climate.uterum'',  ''preset_mode'', ''eco'')
+        %} {{states.climate.uterum.attributes.temperature}} {% else %} {{states.climate.uterum.attributes.temperature
+        | float(0) - states(''input_number.nybygget_uterum_eco_sankning'')|float(0)}}
+        {% endif %}  '
+  - service: climate.set_preset_mode
+    target:
+      entity_id:
+      - climate.sovrum_nb
+      - climate.sovrum_plan2
+      - climate.hall
+      - climate.kok
+      - climate.storstuga
+      - climate.badrum
+      - climate.uterum
+    data:
+      preset_mode: eco
+  - service: climate.set_temperature
+    target:
+      entity_id:
+      - climate.sovrum_nb
+    data:
+      temperature: '{{temp_sovrum_nb}}'
+  - service: climate.set_temperature
+    target:
+      entity_id:
+      - climate.sovrum_plan2
+    data:
+      temperature: '{{temp_sovrum_plan2}}'
+  - service: climate.set_temperature
+    target:
+      entity_id:
+      - climate.hall
+    data:
+      temperature: '{{temp_hall}}'
+  - service: climate.set_temperature
+    target:
+      entity_id:
+      - climate.kok
+    data:
+      temperature: '{{temp_kok}}'
+  - service: climate.set_temperature
+    target:
+      entity_id:
+      - climate.storstuga
+    data:
+      temperature: '{{temp_storstuga}}'
+  - service: climate.set_temperature
+    target:
+      entity_id:
+      - climate.badrum
+    data:
+      temperature: '{{temp_badrum}}'
+  - service: climate.set_temperature
+    target:
+      entity_id:
+      - climate.uterum
+    data:
+      temperature: '{{temp_uterum}}'
+  - service: climate.set_hvac_mode
+    target:
+      entity_id:
+      - climate.sovrum_nb
+      - climate.sovrum_plan2
+      - climate.hall
+      - climate.kok
+      - climate.storstuga
+      - climate.badrum
+      - climate.uterum
+    data:
+      hvac_mode: heat
+  - service: input_boolean.turn_off
+    target:
+      entity_id:
+      - input_boolean.offbyprice_nybygget
+set_nybygget_off:
+  sequence:
+  - service: '{% if not is_state_attr(''climate.storstuga'', ''hvac_action'', ''off'')  %}
+      input_boolean.turn_on {% else %} input_boolean.turn_off {% endif %}'
+    target:
+      entity_id:
+      - input_boolean.offbyprice_nybygget
+  - service: climate.set_hvac_mode
+    target:
+      entity_id:
+      - climate.sovrum_nb
+      - climate.sovrum_plan2
+      - climate.hall
+      - climate.kok
+      - climate.storstuga
+      - climate.badrum
+      - climate.uterum
+    data:
+      hvac_mode: 'off'
+  - service: switch.turn_off
+    target:
+      entity_id:
+      - switch.sonoff_1001464ae8
+set_gamla_huset_normal:
+  sequence:
+  - service: climate.set_preset_mode
+    target:
+      entity_id:
+      - climate.badrum_gamla_huset
+    data:
+      preset_mode: '{%if is_state(''input_select.gamla_huset_varmelage'', ''Hemma'')  %}
+        home {%elif is_state(''input_select.gamla_huset_varmelage'', ''Borta'') %}
+        away {%elif is_state(''input_select.gamla_huset_varmelage'',  ''Extra'') %}
+        boost {%endif %}'
+  #- service: climate.set_hvac_mode
+  #  target:
+  #    entity_id:
+  #    - climate.badrum_gamla_huset
+  #  data:
+  #    hvac_mode: heat
+  - service: input_boolean.turn_off
+    target:
+      entity_id:
+      - input_boolean.offbyprice_gamla_huset
+set_gamla_huset_eco:
+  sequence:
+  - variables:
+      temp_badrum_gamla_huset: '{%if is_state_attr(''climate.badrum_gamla_huset'',
+        ''preset_mode'', ''eco'') %} {{states.climate.badrum_gamla_huset.attributes.temperature}}
+        {% else %} {{states.climate.badrum_gamla_huset.attributes.temperature | float(0)
+        - states(''input_number.gamla_huset_badrum_eco_sankning'')|float(0)}} {% endif
+        %}'
+  - service: climate.set_preset_mode
+    target:
+      entity_id:
+      - climate.badrum_gamla_huset
+    data:
+      preset_mode: eco
+  - service: climate.set_temperature
+    target:
+      entity_id:
+      - climate.badrum_gamla_huset
+    data:
+      temperature: '{{temp_badrum_gamla_huset}}'
+  #- service: climate.set_hvac_mode
+  #  target:
+  #    entity_id:
+  #    - climate.badrum_gamla_huset
+  #  data:
+  #    hvac_mode: heat
+  - service: input_boolean.turn_off
+    target:
+      entity_id:
+      - input_boolean.offbyprice_gamla_huset
+set_gamla_huset_off:
+  sequence:
+  - service: '{% if not is_state_attr(''climate.badrum_gamla_huset'', ''hvac_action'',
+      ''off'')  %} input_boolean.turn_on {% else %} input_boolean.turn_off {% endif
+      %}'
+    target:
+      entity_id:
+      - input_boolean.offbyprice_gamla_huset
+  - service: climate.set_hvac_mode
+    target:
+      entity_id:
+      - climate.badrum_gamla_huset
+    data:
+      hvac_mode: 'off'
+set_heating_unknown:
+  sequence:
+  - service: persistent_notification.create
+    data:
+      message: Illegal heating level
+inform_blocked_nybygget:
+  sequence:
+  - service: persistent_notification.create
+    data:
+      message: Nybygget script blocked
+inform_blocked_badrum:
+  sequence:
+  - service: persistent_notification.create
+    data:
+      message: Bathroom script blocked
+set_pool_normal:
+  sequence:
+  - service: climate.set_preset_mode
+    target:
+      entity_id:
+      - climate.pool
+    data:
+      preset_mode: home
+  - service: climate.set_hvac_mode
+    target:
+      entity_id:
+      - climate.pool
+    data:
+      hvac_mode: heat
+  - service: input_boolean.turn_off
+    target:
+      entity_id:
+      - input_boolean.offbyprice_pool
+set_pool_eco:
+  sequence:
+  - variables:
+      temp_pool: '{%if is_state_attr(''climate.pool'', ''preset_mode'', ''eco'') %}
+        {{states.climate.pool.attributes.temperature}} {% else %} {{states.climate.pool.attributes.temperature
+        | float(0) - states(''input_number.eco_pool'')|float(0)}} {% endif %}'
+  - service: climate.set_preset_mode
+    target:
+      entity_id:
+      - climate.pool
+    data:
+      preset_mode: eco
+  - service: climate.set_temperature
+    target:
+      entity_id:
+      - climate.pool
+    data:
+      temperature: '{{temp_pool}}'
+  - service: climate.set_hvac_mode
+    target:
+      entity_id:
+      - climate.pool
+    data:
+      hvac_mode: heat
+  - service: input_boolean.turn_off
+    target:
+      entity_id:
+      - input_boolean.offbyprice_pool
+set_pool_off:
+  sequence:
+  - service: '{% if not is_state_attr(''climate.pool'', ''hvac_action'', ''off'')  %}
+      input_boolean.turn_on {% else %} input_boolean.turn_off {% endif %}'
+    target:
+      entity_id:
+      - input_boolean.offbyprice_pool
+  - service: climate.set_hvac_mode
+    target:
+      entity_id:
+      - climate.pool
+    data:
+      hvac_mode: 'off'
+topup_circulation:
+  sequence:
+  - service: input_text.set_value
+    data:
+      value: '1:00:00'
+    target:
+      entity_id:
+      - input_text.circulation_time
   - service: switch.turn_on
     target:
       entity_id:
-        - switch.poolcirculation
-        
+      - switch.poolcirculation
+  - service: input_boolean.turn_on
+    target:
+      entity_id:
+      - input_boolean.extra_circulation_active
+circulation_on:
+  sequence:
+  - variables:
+      ontime: '{% set diff = states(''input_number.daily_circulation'') | float(0)
+        -  states(''sensor.watercirculation_daily'') | float(0) %} {% if diff > 0
+        %} {{ diff }} {% else %} 0  {% endif %}'
+  - service: input_text.set_value
+    data:
+      value: '{{ ontime | int }}:{{ ((ontime - ontime | int)*60)  | int }}:00'
+    target:
+      entity_id:
+      - input_text.circulation_time
+  - service: switch.turn_on
+    target:
+      entity_id:
+      - switch.poolcirculation
 circulation_off:
   sequence:
-    - service: switch.turn_off
-      target:
-        entity_id:
-          - switch.poolcirculation
-    - service: input_boolean.turn_off
-      target:
-        entity_id:
-          - input_boolean.extra_circulation_active
-
-# vv_nybygget_off:
-#  sequence:
-#    - service: switch.turn_off
-#      target:
-#        entity_id:
-#          - switch.sonoff_1001464ae8
-#vv_nybygget_on:
-#  sequence:
-#    - service: switch.turn_on
-#      target:
-#        entity_id:
-#          - switch.sonoff_1001464ae8
+  - service: switch.turn_off
+    target:
+      entity_id:
+      - switch.poolcirculation
+  - service: input_boolean.turn_off
+    target:
+      entity_id:
+      - input_boolean.extra_circulation_active
 test_message:
   sequence:
-    - service: >-
-          persistent_notification.create
-      data:
-        message:
-          "Testmeddelande"
+  - service: persistent_notification.create
+    data:
+      message: Testmeddelande
