@@ -10,7 +10,7 @@ cloud:
 # timers
 timer:
   vattenaltan:
-  vattenvaxthus: 
+  vattenvaxthus:
 #    duration: {{(60*states('input_number.vattenvaxthus')|int)|timestamp_custom("%H:%M:%S",0)}}
 
 template:
@@ -31,12 +31,12 @@ template:
       #  icon: "mdi:calendar-clock"
       - name: "Sun power"
         state: >
-          {% if states('sensor.nordpool')|float(0) < (state_attr('sensor.nordpool','average')|float(0) + states('input_number.fees')|float(0)/100 +states('input_number.natavgift')|float(0)/100)*1.25 and states('sensor.inverter_active_power')|float(0) > 500 %}
+          {% if states('sensor.nordpool_kwh_se4_sek_3_10_0')|float(0) < (state_attr('sensor.nordpool_kwh_se4_sek_3_10_0','average')|float(0) + states('input_number.fees')|float(0)/100 +states('input_number.natavgift')|float(0)/100)*1.25 and states('sensor.inverter_active_power')|float(0) > 500 %}
             on
           {% else %}
             off
           {% endif %}
-          
+
       - name: "Pool circulation all"
         state: >
           {% if is_state('switch.poolcirculation','on') or is_state('switch.poolheating','on') %}
@@ -94,7 +94,8 @@ sensor:
   #    - "date_time_iso"
 
   - platform: nordpool
-    region: "SE4" 
+    region: "SE4"
+    VAT: false
   - platform: history_stats
     name: Poolheating daily
     entity_id: switch.poolheating
@@ -160,7 +161,7 @@ climate:
   - platform: simple_thermostat
     name: Badrum gamla huset
     heater: light.golvvarme_badrum_on_off
-    target_sensor: sensor.lumi_lumi_weather_temperature
+    target_sensor: sensor.badrum_temperature
     min_temp: 0.0
     max_temp: 25.0
     #    target_temp: 5.0
@@ -177,7 +178,7 @@ climate:
   - platform: simple_thermostat
     name: Sovrum plan2
     heater: switch.sovrum_plan2_el
-    target_sensor: sensor.sovrum_plan2_temperature
+    target_sensor: sensor.0x00124b0022eb732a_temperature
     min_temp: 0.0
     max_temp: 25.0
     #    target_temp: 20.0

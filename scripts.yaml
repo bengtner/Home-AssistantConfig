@@ -297,18 +297,19 @@ topup_circulation:
   sequence:
   - service: input_text.set_value
     data:
-      value: '1:00:00'
+      value: states('input_number.extra_ciculation_timmar')|string +  ':00:00'
     target:
       entity_id:
       - input_text.circulation_time
-  - service: switch.turn_on
-    target:
-      entity_id:
-      - switch.poolcirculation
   - service: input_boolean.turn_on
     target:
       entity_id:
       - input_boolean.extra_circulation_active
+  - service: switch.turn_on
+    target:
+      entity_id:
+      - switch.poolcirculation
+  
 circulation_on:
   sequence:
   - variables:
