@@ -23,3 +23,15 @@ electricity_cost_hourly:
   source: sensor.electricity_cost
   net_consumption: true
   cycle: hourly
+rain_week:
+  source: sensor.rainfall_today 
+  cycle: weekly
+  unique_id: rainfall_week
+rain_month:
+  source: sensor.rainfall_today 
+  cycle: monthly
+  unique_id: rainfall_month
+rain_year:
+  source: sensor.rainfall_today 
+  cycle: yearly
+  unique_id: rainfall_year

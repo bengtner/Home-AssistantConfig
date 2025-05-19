@@ -242,12 +242,15 @@ set_pool_normal:
       - climate.pool
     data:
       preset_mode: home
-  - service: climate.set_hvac_mode
+#  - service: climate.set_hvac_mode
+#    target:
+#      entity_id:
+#      - climate.pool
+#    data:
+#      hvac_mode: heat
+  - service: '{%if is_state(''input_boolean.prio_solar'',''on'') and is_state(''sensor.sun_power'',''off'') %} climate.turn_off {%else%} climate.turn_on {%endif%}'
     target:
-      entity_id:
-      - climate.pool
-    data:
-      hvac_mode: heat
+      entity_id: climate.pool
   - service: input_boolean.turn_off
     target:
       entity_id:
@@ -270,12 +273,15 @@ set_pool_eco:
       - climate.pool
     data:
       temperature: '{{temp_pool}}'
-  - service: climate.set_hvac_mode
+#  - service: climate.set_hvac_mode
+#    target:
+#      entity_id:
+#      - climate.pool
+#    data:
+#      hvac_mode: heat
+  - service: '{%if is_state(''input_boolean.prio_solar'',''on'') and is_state(''sensor.sun_power'',''off'') %} climate.turn_off {%else%} climate.turn_on {%endif%}'
     target:
-      entity_id:
-      - climate.pool
-    data:
-      hvac_mode: heat
+      entity_id: climate.pool
   - service: input_boolean.turn_off
     target:
       entity_id:

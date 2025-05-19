@@ -1,785 +1,849 @@
-- id: "1647538814035"
+- id: '1647538814035'
   alias: Kvällsljus
-  description: ""
-  trigger:
-    - platform: sun
-      event: sunset
-      offset: 0
-  condition: []
-  action:
-    - service: switch.turn_on
-      target:
-        entity_id:
-          - switch.utebelysning
-          - switch.ikea_of_sweden_tradfri_control_outlet_switch
-          - switch.sonoff_1001d84e2b
-          - switch.advent_1
-          - switch.advent_2
-          - switch.advent_3
-          - switch.koket_ii_switch_2
+  description: ''
+  triggers:
+  - event: sunset
+    offset: 0
+    trigger: sun
+  conditions: []
+  actions:
+  - target:
+      entity_id:
+      - switch.utebelysning
+      - switch.ikea_of_sweden_tradfri_control_outlet_switch
+      - switch.advent_1
+      - switch.advent_2
+      - switch.advent_3
+      - switch.koket_ii_switch_2
+      - switch.adventsgran_switch_2
+      device_id: 3f041d5cc2b8e957e6244edd4274668a
+    action: switch.turn_on
+    data: {}
   mode: single
-- id: "1647539027785"
+- id: '1647539027785'
   alias: Släck
-  description: ""
-  trigger:
-    - platform: time
-      at: 00:00:00
-    - platform: sun
-      event: sunrise
-      offset: 0
-  condition: []
-  action:
-    - service: switch.turn_off
-      target:
-        entity_id:
-          - switch.utebelysning
-          - switch.ikea_of_sweden_tradfri_control_outlet_switch
-          - switch.sonoff_1001d84e2b
-          - switch.advent_1
-          - switch.advent_2
-          - switch.advent_3
-          - switch.koket_ii_switch_2
+  description: ''
+  triggers:
+  - trigger: time
+    at: 00:00:00
+  - event: sunrise
+    offset: 0
+    trigger: sun
+  conditions: []
+  actions:
+  - target:
+      entity_id:
+      - switch.ikea_of_sweden_tradfri_control_outlet_switch
+      - switch.sonoff_1001d84e2b
+      - switch.advent_1
+      - switch.advent_2
+      - switch.advent_3
+      - switch.koket_ii_switch_2
+      - switch.adventsgran_switch_2
+      device_id: a7189571e7a6c5dc8ae6aaa005eeda26
+    action: switch.turn_off
+    data: {}
   mode: single
-- id: "1647539238847"
+- id: '1647539238847'
   alias: Morgonljus
-  description: ""
-  trigger:
-    - platform: time
-      at: 06:00:00
-  condition:
-    - condition: sun
-      before: sunrise
-      after: sunset
-  action:
-    - service: switch.turn_on
-      target:
-        entity_id:
-          - switch.utebelysning
-          - switch.ikea_of_sweden_tradfri_control_outlet_switch
-          - switch.sonoff_1001d84e2b
-          - switch.advent_1
-          - switch.advent_2
-          - switch.advent_3
-          - switch.koket_ii_switch_2
+  description: ''
+  triggers:
+  - at: 00:00:00
+    trigger: time
+  conditions:
+  - condition: sun
+    before: sunrise
+    after: sunset
+  actions:
+  - target:
+      entity_id:
+      - switch.ikea_of_sweden_tradfri_control_outlet_switch
+      - switch.sonoff_1001d84e2b
+      - switch.advent_1
+      - switch.advent_2
+      - switch.advent_3
+      - switch.koket_ii_switch_2
+      - switch.adventsgran_switch_2
+      device_id: a7189571e7a6c5dc8ae6aaa005eeda26
+    action: switch.turn_on
+    data: {}
   mode: single
 - id: Senaste heating level
   alias: Senaste heating level
-  trigger:
-    - platform: state
-      entity_id:
-        - sensor.heating_level
-      to:
-        - Normal
-        - Eco
-  action:
-    - service: input_select.select_option
-      target:
-        entity_id: input_select.senaste_heating_level
-      data:
-        option: "{{states('sensor.heating_level')}}"
-- alias: Daikin normal
-  id: Daikin normal
+  triggers:
+  - entity_id:
+    - sensor.heating_level
+    to:
+    - Normal
+    - Eco
+    trigger: state
+  actions:
+  - target:
+      entity_id: input_select.senaste_heating_level
+    data:
+      option: '{{states(''sensor.heating_level'')}}'
+    action: input_select.select_option
+- id: Daikin normal
+  alias: Daikin normal
   description: Will adjust settings to normal when energy price is low
-  trigger:
-    - platform: state
-      entity_id: sensor.heating_level
-      from: Eco
-      to: Normal
-  condition: "{{not is_state_attr('climate.gamla_huset', 'hvac_action', 'off')}}"
-  action:
-    - service: climate.set_temperature
-      target:
-        entity_id: climate.gamla_huset
-      data:
-        temperature:
-          "{{(states.climate.gamla_huset.attributes.temperature|float(0)
-          + states('input_number.eco_sankning')|float(0))}}"
+  triggers:
+    trigger: state
+    entity_id:
+    - sensor.heating_level
+    from: Eco
+    to: Normal
+  condition: '{{not is_state_attr(''climate.gamla_huset'', ''hvac_action'', ''off'')}}'
+  actions:
+  - target:
+      entity_id: climate.gamla_huset
+    data:
+      temperature: '{{(states.climate.gamla_huset.attributes.temperature|float(0)
+        + states(''input_number.eco_sankning'')|float(0))}}'
+    action: climate.set_temperature
   mode: single
-- alias: Daikin eco
-  id: Daikin eco
+- id: Daikin eco
+  alias: Daikin eco
   description: Will adjust settings to Eco when energy price is high
-  trigger:
-    - platform: state
-      entity_id: sensor.heating_level
-      from: Normal
-      to: Eco
-  condition: "{{not is_state_attr('climate.gamla_huset', 'hvac_action', 'off')}}"
-  action:
-    - service: climate.set_temperature
-      target:
-        entity_id: climate.gamla_huset
-      data:
-        temperature:
-          "{{(states.climate.gamla_huset.attributes.temperature|float(0)
-          - states('input_number.eco_sankning')|float(0))}}"
+  triggers:
+    trigger: state
+    entity_id: sensor.heating_level
+    from: Normal
+    to: Eco
+  condition: '{{not is_state_attr(''climate.gamla_huset'', ''hvac_action'', ''off'')}}'
+  actions:
+  - target:
+      entity_id: climate.gamla_huset
+    data:
+      temperature: '{{(states.climate.gamla_huset.attributes.temperature|float(0)
+        - states(''input_number.eco_sankning'')|float(0))}}'
+    action: climate.set_temperature
   mode: single
 - alias: Daikin on
   id: Daikin on
   description: Will turn on Daikin after auto off
-  trigger:
-    - platform: state
-      entity_id: sensor.heating_level
-      from: "Off"
-      to:
-        - Eco
-        - Normal
+  triggers:
+    trigger: state
+    entity_id: sensor.heating_level
+    from: 'Off'
+    to:
+    - Eco
+    - Normal
   condition: []
-  action:
-    - service: climate.set_temperature
-      target:
-        entity_id: climate.gamla_huset
-      data:
-        temperature:
-          "{% if states.input_select.senaste_heating_level == states.sensor.heating_level
-          %} {{states.climate.gamla_huset.attributes.temperature|float(0)}} {% elif
-          is_state('sensor.heating_level','Eco') %} {{(states.climate.gamla_huset.attributes.temperature|float(0)
-          - states('input_number.eco_sankning')|float(0))}} {% else %} {{(states.climate.gamla_huset.attributes.temperature|float(0)
-          + states('input_number.eco_sankning')|float(0))}} {% endif %}"
-        hvac_mode: heat
+  actions:
+  - target:
+      entity_id: climate.gamla_huset
+    data:
+      temperature: '{% if states.input_select.senaste_heating_level == states.sensor.heating_level
+        %} {{states.climate.gamla_huset.attributes.temperature|float(0)}} {% elif
+        is_state(''sensor.heating_level'',''Eco'') %} {{(states.climate.gamla_huset.attributes.temperature|float(0)
+        - states(''input_number.eco_sankning'')|float(0))}} {% else %} {{(states.climate.gamla_huset.attributes.temperature|float(0)
+        + states(''input_number.eco_sankning'')|float(0))}} {% endif %}'
+      hvac_mode: heat
+    action: climate.set_temperature
   mode: single
 - alias: Elpanna_on
-  description: ""
-  trigger:
-    - platform: state
-      entity_id: switch.varmegolv
-      to: "on"
-  condition: []
-  action:
-    - service: switch.turn_on
-      target:
-        entity_id:
-          - switch.elpanna
-  mode: single
-  id: 2a3b1433417e4ef68c759ddb50208fee
-- alias: Elpanna_off
-  description: ""
-  trigger:
-    - platform: state
-      entity_id: switch.varmegolv
-      to: "off"
-  condition: []
-  action:
-    - service: switch.turn_off
-      target:
-        entity_id:
-          - switch.elpanna
-  mode: single
   id: deecc85428304ac5873019eb37b96669
+  description: ''
+  triggers:
+    trigger: state
+    entity_id: switch.varmegolv
+    to: 'on'
+  condition: []
+  actions:
+  - target:
+      entity_id: switch.elpanna
+    action: switch.turn_on
+  mode: single
+- id: 2a3b1433417e4ef68c759ddb50208fee
+  alias: Elpanna_off
+  description: ''
+  triggers:
+    trigger: state
+    entity_id: switch.varmegolv
+    to: 'off'
+  condition: []
+  actions:
+  - target:
+      entity_id: switch.elpanna
+    action: switch.turn_off
+  mode: single
 - alias: Nybygget autoadjust
   description: Will adjust settings based on energy price-
-  trigger:
-    - platform: state
-      entity_id:
-        - sensor.heating_level
-  condition: "{{ not is_state_attr('climate.storstugan', 'hvac_action', 'off')
-    or is_state('input_boolean.offbyprice_nybygget','on') }}"
-  action:
-    service:
-      "{% if is_state('sensor.heating_level','Normal') %} script.set_nybygget_normal
-      {% elif is_state('sensor.heating_level','Eco') %} script.set_nybygget_eco
-      {% elif is_state('sensor.heating_level','Off') %} script.set_nybygget_off
-      {% else %} script.set_heating_unknown {% endif %}"
+  triggers:
+    trigger: state
+    entity_id:
+    - sensor.heating_level
+  condition: '{{ not is_state_attr(''climate.storstugan'', ''hvac_action'', ''off'')
+    or is_state(''input_boolean.offbyprice_nybygget'',''on'') }}'
+  actions:
+    action: '{% if is_state(''sensor.heating_level'',''Normal'') %} script.set_nybygget_normal
+      {% elif is_state(''sensor.heating_level'',''Eco'') %} script.set_nybygget_eco
+      {% elif is_state(''sensor.heating_level'',''Off'') %} script.set_nybygget_off
+      {% else %} script.set_heating_unknown {% endif %}'
   id: 669b2f3946694ce1b57a48c6dd0bcd18
   mode: single
 - alias: Elvärme autoon
   description: Will turn on depending on price
-  trigger:
-    - platform: state
-      entity_id: sensor.heating_level
-      to: Normal
-  condition: "{{is_state('input_select.styr_elvarme','Elpris')}}"
-  action:
-    - service: switch.turn_on
-      target:
-        entity_id: switch.elradiatorer
-    - service: light.turn_on
-      target:
-        entity_id: light.sonoff_01minizb_light
+  triggers:
+    trigger: state
+    entity_id: sensor.heating_level
+    to: Normal
+  condition: '{{is_state(''input_select.styr_elvarme'',''Elpris'')}}'
+  actions:
+  - target:
+      entity_id: switch.elradiatorer
+    action: switch.turn_on
+  - target:
+      entity_id: light.sonoff_01minizb_light
+    action: light.turn_on
   id: Elvärme autoon
   mode: single
 - alias: Elvärme autooff
   description: Will turn off depending on price
-  trigger:
-    - platform: state
-      entity_id: sensor.heating_level
-      to:
-        - Eco
-        - "Off"
-  condition: "{{is_state('input_select.styr_elvarme','Elpris')}}"
-  action:
-    - service: switch.turn_off
-      target:
-        entity_id: switch.elradiatorer
-    - service: light.turn_off
-      target:
-        entity_id: light.sonoff_01minizb_light
+  triggers:
+    trigger: state
+    entity_id: sensor.heating_level
+    to:
+    - Eco
+    - 'Off'
+  condition: '{{is_state(''input_select.styr_elvarme'',''Elpris'')}}'
+  actions:
+  - target:
+      entity_id: switch.elradiatorer
+    action: switch.turn_off
+  - target:
+      entity_id: light.sonoff_01minizb_light
+    action: light.turn_off
   id: Elvärme autooff
   mode: single
 - alias: Elvärme on
   description: Will turn heaters on
-  trigger:
-    - platform: state
-      entity_id: input_select.styr_elvarme
-      to: På
+  triggers:
+    trigger: state
+    entity_id: input_select.styr_elvarme
+    to: På
   condition: []
-  action:
-    - service: switch.turn_on
-      target:
-        entity_id: switch.elradiatorer
-    - service: light.turn_on
-      target:
-        entity_id: light.sonoff_01minizb_light
+  actions:
+  - target:
+      entity_id: switch.elradiatorer
+    action: switch.turn_on
+  - target:
+      entity_id: light.sonoff_01minizb_light
+    action: light.turn_on
   id: Elvärme on
   mode: single
 - alias: Elvärme off
   description: Will turn heaters off
-  trigger:
-    - platform: state
-      entity_id: input_select.styr_elvarme
-      to: Av
+  triggers:
+    trigger: state
+    entity_id: input_select.styr_elvarme
+    to: Av
   condition: []
-  action:
-    - service: switch.turn_off
-      target:
-        entity_id: switch.elradiatorer
-    - service: light.turn_off
-      target:
-        entity_id: light.sonoff_01minizb_light
-  id: Elvärme off
+  actions:
+  - target:
+      entity_id: switch.elradiatorer
+    action: switch.turn_off
+  - target:
+      entity_id: light.sonoff_01minizb_light
+    action: light.turn_off
+  id: '1650799729864'
   mode: single
-- id: "1650799729864"
-  alias: Nybygget hemma
-  description: "Sätter 'home' som preset mode i nybygget. "
-  trigger:
-    - platform: state
-      entity_id: input_select.heating_level
-      to: Hemma
+- alias: Nybygget hemma
+  description: 'Sätter ''home'' som preset mode i nybygget. '
+  triggers:
+    trigger: state
+    entity_id: input_select.heating_level
+    to: Hemma
   condition: []
-  action:
-    - service: climate.set_preset_mode
-      data:
-        preset_mode: home
-      target:
-        entity_id:
-          - climate.hall
-          - climate.kok
-          - climate.sovrum_nb
-          - climate.sovrum_plan2
-          - climate.storstuga
-          - climate.badrum
-    - service:
-        "{% if is_state('sensor.heating_level','Normal') %} script.set_nybygget_normal
-        {% elif is_state('sensor.heating_level','Eco') %} script.set_nybygget_eco
-        {% elif is_state('sensor.heating_level','Off') %} script.set_nybygget_off
-        {% else %} script.set_heating_unknown {% endif %}"
+  actions:
+  - action: climate.set_preset_mode
+    data:
+      preset_mode: home
+    target:
+      entity_id:
+      - climate.hall
+      - climate.kok
+      - climate.sovrum_nb
+      - climate.sovrum_plan2
+      - climate.storstuga
+      - climate.badrum
+  - action: '{% if is_state(''sensor.heating_level'',''Normal'') %} script.set_nybygget_normal
+      {% elif is_state(''sensor.heating_level'',''Eco'') %} script.set_nybygget_eco
+      {% elif is_state(''sensor.heating_level'',''Off'') %} script.set_nybygget_off
+      {% else %} script.set_heating_unknown {% endif %}'
   mode: single
-- id: "1650804270407"
+  id: 7bc4870e248d4452b9dcf4c356fe7742
+- id: '1650804270407'
   alias: Nybygget borta
   description: Sätter värme läge borta
-  trigger:
-    - platform: state
-      entity_id: input_select.heating_level
-      to: Borta
+  triggers:
+    trigger: state
+    entity_id: input_select.heating_level
+    to: Borta
   condition: []
-  action:
-    - service: climate.set_preset_mode
-      data:
-        preset_mode: away
-      target:
-        entity_id:
-          - climate.badrum
-          - climate.hall
-          - climate.kok
-          - climate.sovrum_nb
-          - climate.sovrum_plan2
-          - climate.storstuga
-    - service:
-        "{% if is_state('sensor.heating_level','Eco') %} script.set_nybygget_eco
-        {% elif is_state('sensor.heating_level','Normal') %} script.set_nybygget_normal
-        {% elif is_state('sensor.heating_level','Off') %} script.set_nybygget_off
-        {% else %} script.set_heating_unknown {% endif %}"
+  actions:
+  - action: climate.set_preset_mode
+    data:
+      preset_mode: away
+    target:
+      entity_id:
+      - climate.badrum
+      - climate.hall
+      - climate.kok
+      - climate.sovrum_nb
+      - climate.sovrum_plan2
+      - climate.storstuga
+  - action: '{% if is_state(''sensor.heating_level'',''Eco'') %} script.set_nybygget_eco
+      {% elif is_state(''sensor.heating_level'',''Normal'') %} script.set_nybygget_normal
+      {% elif is_state(''sensor.heating_level'',''Off'') %} script.set_nybygget_off
+      {% else %} script.set_heating_unknown {% endif %}'
   mode: single
 - alias: Gamla huset autoadjust
   description: Will adjust settings based on energy price-
-  trigger:
-    - platform: state
-      entity_id:
-        - sensor.heating_level
-  condition: "{{ not is_state_attr('climate.badrum_gamla_huset', 'hvac_action',
-    'off') or is_state('input_boolean.offbyprice_gamla_huset','on') }}"
-  action:
-    service:
-      "{% if is_state('sensor.heating_level','Normal') %} script.set_gamla_huset_normal  {%
-      elif is_state('sensor.heating_level','Eco') %} script.set_gamla_huset_eco
-      {% elif is_state('sensor.heating_level','Off') %} script.set_gamla_huset_off
-      {% else %} script.set_heating_unknown {% endif %}"
+  triggers:
+    trigger: state
+    entity_id:
+    - sensor.heating_level
+  condition: '{{ not is_state_attr(''climate.badrum_gamla_huset'', ''hvac_action'',
+    ''off'') or is_state(''input_boolean.offbyprice_gamla_huset'',''on'') }}'
+  actions:
+    action: '{% if is_state(''sensor.heating_level'',''Normal'') %} script.set_gamla_huset_normal  {%
+      elif is_state(''sensor.heating_level'',''Eco'') %} script.set_gamla_huset_eco
+      {% elif is_state(''sensor.heating_level'',''Off'') %} script.set_gamla_huset_off
+      {% else %} script.set_heating_unknown {% endif %}'
   mode: single
   id: 368553f71b314b108b5317ef4d1442a2
 - alias: Gamla huset borta
   description: Sätter värme läge borta
-  trigger:
-    - platform: state
-      entity_id: input_select.gamla_huset_varmelage
-      to: Borta
+  triggers:
+    trigger: state
+    entity_id: input_select.gamla_huset_varmelage
+    to: Borta
   condition: []
-  action:
-    - service: climate.set_preset_mode
-      data:
-        preset_mode: away
-      target:
-        entity_id:
-          - climate.badrum_gamla_huset
-    - service:
-        "{% if is_state('sensor.heating_level','Eco') %} script.set_gamla_huset_eco
-        {% endif %}"
+  actions:
+  - action: climate.set_preset_mode
+    data:
+      preset_mode: away
+    target:
+      entity_id:
+      - climate.badrum_gamla_huset
+  - action: '{% if is_state(''sensor.heating_level'',''Eco'') %} script.set_gamla_huset_eco
+      {% endif %}'
   mode: single
   id: 34b8e6785d484f79a235d72e1b2e4592
 - alias: Gamla huset hemma
-  description: "Sätter 'home' som preset mode i gamla huset. "
-  trigger:
-    - platform: state
-      entity_id: input_select.gamla_huset_varmelage
-      to: Hemma
+  description: 'Sätter ''home'' som preset mode i gamla huset. '
+  triggers:
+  - trigger: state
+    entity_id: input_select.gamla_huset_varmelage
+    to: Hemma
   condition: []
-  action:
-    - service: climate.set_preset_mode
-      data:
-        preset_mode: home
-      target:
-        entity_id:
-          - climate.badrum_gamla_huset
-    - service:
-        "{% if is_state('sensor.heating_level','Eco') %} script.set_gamla_huset_eco
-        {% endif %}"
+  actions:
+  - action: climate.set_preset_mode
+    data:
+      preset_mode: home
+    target:
+      entity_id:
+      - climate.badrum_gamla_huset
+  - action: '{% if is_state(''sensor.heating_level'',''Eco'') %} script.set_gamla_huset_eco
+      {% endif %}'
   mode: single
   id: 241ed6089fc54c1bb3cce382b9732502
 - alias: Pool autoadjust
   description: Will adjust settings based on energy price-
-  trigger:
-    - platform: state
-      entity_id:
-        - sensor.heating_level
-  action:
-    service:
-      "{% if is_state('sensor.heating_level','Normal') %} script.set_pool_normal
-      {% elif is_state('sensor.heating_level','Eco') %} script.set_pool_eco {%
-      elif is_state('sensor.heating_level','Off') %} script.set_pool_off {% else
-      %} #cript.set_heating_unknown {% endif %}"
+  triggers:
+    trigger: state
+    entity_id:
+    - sensor.heating_level
+  actions:
+    action: '{% if is_state(''sensor.heating_level'',''Normal'') %} script.set_pool_normal
+      {% elif is_state(''sensor.heating_level'',''Eco'') %} script.set_pool_eco {%
+      elif is_state(''sensor.heating_level'',''Off'') %} script.set_pool_off {% else
+      %} script.set_heating_unknown {% endif %}'
   mode: single
   id: 6aa0b51e330c4bf3a8e4fd171d7880e4
 - alias: Switch_on
   description: Turn switch on based on energy price
-  trigger:
-    - platform: state
+  triggers:
+    trigger: state
+    entity_id:
+    - sensor.heating_level
+    to: Normal
+  actions:
+    action: switch.turn_on
+    target:
       entity_id:
-        - sensor.heating_level
-      to: Normal
-  action:
-    - service: switch.turn_on
-      target:
-        entity_id:
-          - switch.ikea_of_sweden_tradfri_control_outlet_37da3ffe_on_off
+      - switch.ikea_of_sweden_tradfri_control_outlet_37da3ffe_on_off
   mode: single
   id: 92fa5d73b7934fa5abb891e64b6ab718
 - alias: Switch_vv_on
-  description:
-    Turn VV on based on energy price. Will just work if heating selector
+  description: Turn VV on based on energy price. Will just work if heating selector
     is set to Hemma
-  trigger:
-    - platform: state
-      entity_id:
-        - sensor.heating_level
-      to: Normal
-  condition: "{{is_state('input_select.heating_level','Hemma')}}"
+  triggers:
+    trigger: state
+    entity_id:
+    - sensor.heating_level
+    to: Normal
+  condition: '{{is_state(''input_select.heating_level'',''Hemma'')}}'
   action:
-    - service: switch.turn_on
-      target:
-        entity_id:
-          - switch.sonoff_1001464ae8
+    action: switch.turn_on
+    target:
+      entity_id:
+      - switch.sonoff_1001464ae8
   id: ab08ec6c14f84565ae7a38cbd490068b
 - alias: Switch_off
   description: Turn switch off based on energy price
-  trigger:
-    - platform: state
-      entity_id:
-        - sensor.heating_level
-      to:
-        - Eco
-        - "Off"
+  triggers:
+    trigger: state
+    entity_id:
+    - sensor.heating_level
+    to:
+    - Eco
+    - 'Off'
   condition: []
   action:
-    service: switch.turn_off
+    action: switch.turn_off
     target:
       entity_id:
-        - switch.ikea_of_sweden_tradfri_control_outlet_37da3ffe_on_off
+      - switch.ikea_of_sweden_tradfri_control_outlet_37da3ffe_on_off
   mode: single
   id: 22bf58f0c56b4f37a1c043df0ae1a396
 - alias: Switch_vv_off
   description: Turn VV off based on energy price
-  trigger:
-    - platform: state
-      entity_id:
-        - sensor.heating_level
-      to:
-        - Eco
-        - "Off"
+  triggers:
+    trigger: state
+    entity_id:
+    - sensor.heating_level
+    to:
+    - Eco
+    - 'Off'
   condition: []
   action:
-    service: switch.turn_off
+    action: switch.turn_off
     target:
       entity_id:
-        - switch.sonoff_1001464ae8
+      - switch.sonoff_1001464ae8
   mode: single
   id: 6556f2b14dd745cb9902b927ed9b06ff
 - alias: Circulation_top_up
-  id: "195603032417"
+  id: '195603032417'
   description: Turn circulation on to reach daily target
-  trigger:
-    - platform: state
-      entity_id:
-        - sensor.electricity_price_torngard_201
-  condition: "{{ (
-    is_state('switch.poolcirculation','off')  and states('sensor.electricity_price_torngard_201')|float(0)
-    < state_attr('sensor.electricity_price_torngard_201', 'avg_price')|float(0)
-    * (1.0 + (states('input_number.niva')|float(0))/100.0 )  and is_state('input_boolean.prio_solar','off')
-    or (is_state('sensor.sun_power','on') and is_state('input_boolean.prio_solar','on')))
-    }}"
-  action:
-    service: script.circulation_on
+  triggers:
+    trigger: state
+    entity_id:
+    - sensor.nordpool_kwh_se4_sek_3_10_0
+  condition: '{{ ( is_state(''switch.poolcirculation'',''off'')  and states(''sensor.nordpool_kwh_se4_sek_3_10_0'')|float(0)
+    < state_attr(''sensor.nordpool_kwh_se4_sek_3_10_0'', ''average'')|float(0) * (1.0
+    + (states(''input_number.niva'')|float(0))/100.0 )  and is_state(''input_boolean.prio_solar'',''off'')
+    or (is_state(''sensor.sun_power'',''on'') and is_state(''input_boolean.prio_solar'',''on'')))
+    }}'
+  actions:
+    action: script.circulation_on
   mode: single
-
 - alias: stop_circulation_after_time
   description: Stops circulation when daily target is reached
-  trigger:
-    - platform: state
-      entity_id: switch.poolcirculation
-      from: "off"
-      for: "{{states('input_text.circulation_time')}}"
-      to: "on"
-  condition: "{{ is_state('input_boolean.extra_circulation_active','off')}}"
-  action:
-    - service: script.circulation_off
+  triggers:
+    trigger: state
+    entity_id: switch.poolcirculation
+    from: 'off'
+    for: '{{states(''input_text.circulation_time'')}}'
+    to: 'on'
+  condition: '{{ is_state(''input_boolean.extra_circulation_active'',''off'')}}'
+  actions:
+    action: script.circulation_off
   mode: single
   id: 778cfd56de444fc38cc1954dd90ec1fc
 - alias: stop_extra_circulation_after_time
   description: Stops circulation when daily target is reached
-  trigger:
-    - platform: state
-      entity_id: switch.poolcirculation
-      from: "off"
-      for: "{{states('input_number.extra_circulation_timmar')|int|string + ':00:00'}}"
-      to: "on"
-  condition: "{{ is_state('input_boolean.extra_circulation_active','on')}}"
-  action:
-    - service: script.circulation_off
+  triggers:
+    trigger: state
+    entity_id: switch.poolcirculation
+    from: 'off'
+    for: '{{states(''input_number.extra_circulation_timmar'')|int|string + '':00:00''}}'
+    to: 'on'
+  condition: '{{ is_state(''input_boolean.extra_circulation_active'',''on'')}}'
+  actions:
+    action: script.circulation_off
   mode: single
+  id: 7e0221e3f4974465a45e38290d1b4d76
 - alias: stop_circulation_by_price
-  id: "195603042417"
+  id: '195603042417'
   description: Stops circulation when energy price is too high
-  trigger:
-    - platform: state
-      entity_id: sensor.electricity_price_torngard_201
-  condition:
-    "{{is_state('switch.poolcirculation','on') and is_state('input_boolean.extra_circulation_active','off')
-    \ and states('sensor.electricity_price_torngard_201')|float(0)\n        > state_attr('sensor.electricity_price_torngard_201',
-    'avg_price')|float(0)\n        * (1.0 + (states('input_number.niva')|float(0))/100.0
+  triggers:
+    trigger: state
+    entity_id: sensor.nordpool_kwh_se4_sek_3_10_0
+  condition: "{{is_state('switch.poolcirculation','on') and is_state('input_boolean.extra_circulation_active','off')
+    \ a
+    d states('sensor.nordpool_kwh_se4_sek_3_10_0')|float(0)\n        > state_attr('sensor.nordpool_kwh_se4_sek_3_10_0',
+    'average')|float(0)\n        * (1.0 + (states('input_number.niva')|float(0))/100.0
     ) and is_state('input_boolean.prio_solar','off') or (is_state('sensor.sun_power','off')
     and is_state('input_boolean.prio_solar','on'))}}"
-  action:
-    - service: script.circulation_off
+  actions:
+    action: script.circulation_off
   mode: single
 - alias: charge_battery
   description: Will set battery to charging mode
-  trigger:
-    - platform: state
-      entity_id: input_select.battery_mode
-      to: Charge
-  action:
-    - service: select.select_option
-      target:
-        entity_id: select.battery_working_mode
-      data:
-        option: Time Of Use
-    - service: number.set_value
-      target:
-        entity_id:
-          - number.battery_maximum_charging_power
-          - number.battery_maximum_discharging_power
-      data:
-        value: 2500
+  triggers:
+    trigger: state
+    entity_id: input_select.battery_mode
+    to: Charge
+  actions:
+  - action: select.select_option
+    target:
+      entity_id: select.battery_working_mode
+    data:
+      option: Time Of Use
+  - action: number.set_value
+    target:
+      entity_id:
+      - number.battery_maximum_charging_power
+      - number.battery_maximum_discharging_power
+    data:
+      value: 2500
   mode: single
   id: 9544bf9641c548d5b24295e66d77c869
 - alias: discharge_battery
   description: Will set battery to discharging mode
-  trigger:
-    - platform: state
-      entity_id: input_select.battery_mode
-      to: Discharge
-  action:
-    - service: select.select_option
-      target:
-        entity_id: select.battery_working_mode
-      data:
-        option: Fully Fed To Grid
-    - service: number.set_value
-      target:
-        entity_id:
-          - number.battery_maximum_charging_power
-          - number.battery_maximum_discharging_power
-      data:
-        value: 2500
+  triggers:
+  - trigger: state
+    entity_id: input_select.battery_mode
+    to: Discharge
+  actions:
+  - action: select.select_option
+    target:
+      entity_id: select.battery_working_mode
+    data:
+      option: Fully Fed To Grid
+  - action: number.set_value
+    target:
+      entity_id:
+      - number.battery_maximum_charging_power
+      - number.battery_maximum_discharging_power
+    data:
+      value: 2500
   mode: single
   id: 3d6a5fdc498c4b2282e8298c9ba7563d
 - alias: topup_battery
   description: Maximize Self Consumption. Will load battery from solar panels only
-  trigger:
-    - platform: state
-      entity_id: input_select.battery_mode
-      to: Selfconsumption
-  action:
-    - service: select.select_option
-      target:
-        entity_id: select.battery_working_mode
-      data:
-        option: Maximise Self Consumption
-    - service: number.set_value
-      target:
-        entity_id:
-          - number.battery_maximum_charging_power
-          - number.battery_maximum_discharging_power
-      data:
-        value: 2500
+  triggers:
+  - trigger: state
+    entity_id: input_select.battery_mode
+    to: Selfconsumption
+  actions:
+  - action: select.select_option
+    target:
+      entity_id: select.battery_working_mode
+    data:
+      option: Maximise Self Consumption
+  - action: number.set_value
+    target:
+      entity_id:
+      - number.battery_maximum_charging_power
+      - number.battery_maximum_discharging_power
+    data:
+      value: 2500
   mode: single
   id: f2ebda6879944516a2a726f16dad78b1
 - alias: idle_battery
   description: Will keep battery idle by setting max_charge/discharge_power to 0
-  trigger:
-    - platform: state
-      entity_id: input_select.battery_mode
-      to: Idle
-  action:
-    - service: input_select.select_option
-      target:
-        entity_id: select.battery_working_mode
-      data:
-        option: Maximise Self Consumption
-    - service: number.set_value
-      target:
-        entity_id:
-          - number.battery_maximum_charging_power
-          - number.battery_maximum_discharging_power
-      data:
-        value: 0
+  triggers:
+  - trigger: state
+    entity_id: input_select.battery_mode
+    to: Idle
+  actions:
+  - action: input_select.select_option
+    target:
+      entity_id: select.battery_working_mode
+    data:
+      option: Maximise Self Consumption
+  - action: number.set_value
+    target:
+      entity_id:
+      - number.battery_maximum_charging_power
+      - number.battery_maximum_discharging_power
+    data:
+      value: 2500
   mode: single
   id: 639e42e585ee4e9a91a5e3daf87bcad2
-- alias: Växtljus_on_off
-  trigger:
-    - platform: state
-      entity_id: schedule.vaxtljus
-  condition: "{{ trigger.to_state.state in ['on', 'off'] }}"
-  action:
-    - service: switch.turn_{{ trigger.to_state.state }}
-      target:
-        entity_id: switch.vaxtljus2
+- id: 3b5533fe40474c0cbfe2958e2bbb14fc
+  alias: Växtljus_on_off
+  triggers:
+  - entity_id: schedule.vaxtljus
+    trigger: state
+  conditions:
+  - condition: template
+    value_template: '{{ trigger.to_state.state in [''on'', ''off''] }}'
+  actions:
+  - target:
+      entity_id: switch.vaxtljus2
+    action: switch.turn_{{ trigger.to_state.state }}
   mode: single
-  id: 3b5533fe40474c0cbfe2958e2bbb14fc
 - alias: Värm med solel
-  trigger:
-    - platform: state
-      entity_id: schedule.varm_med_solel
-  condition: "{{ trigger.to_state.state in ['on', 'off'] and is_state('input_boolean.prio_solar','on')}}"
-  action:
-    - service: climate.turn_{{ trigger.to_state.state }}
-      target:
-        entity_id: climate.pool
+  triggers:
+  - trigger: state
+    entity_id: schedule.varm_med_solel
+  condition: '{{ trigger.to_state.state in [''on'', ''off''] and is_state(''input_boolean.prio_solar'',''on'')}}'
+  actions:
+  - target:
+      entity_id: climate.pool
+    action: climate.turn_{{ trigger.to_state.state }}
   mode: single
   id: varm_med_solel
 - alias: Värm med solel 2
-  trigger:
-    - platform: state
-      entity_id: sensor.sun_power
-  condition: "{{ trigger.to_state.state in ['on', 'off'] and is_state('input_boolean.prio_solar','on')}}"
-  action:
-    - service: climate.turn_{{ trigger.to_state.state }}
-      target:
-        entity_id: climate.pool
+  triggers:
+  - trigger: state
+    entity_id: sensor.sun_power
+  condition: '{{ trigger.to_state.state in [''on'', ''off''] and is_state(''input_boolean.prio_solar'',''on'')}}'
+  actions:
+  - target:
+      entity_id: climate.pool
+    action: climate.turn_{{ trigger.to_state.state }}
   mode: single
   id: varm_med_solel_2
 - alias: Vattna altan
   id: Vattna altan timer
   description: Timer is started when the switch is set to on.
-  trigger:
-    - platform: state
-      entity_id: switch.ikea_of_sweden_knycklan_receiver_switch
-      to: "on"
-  action:
-    - service: timer.start
-      target:
-        entity_id: timer.vattenaltan
-      data:
-        duration: "{{states('input_number.vattenaltantid')|int*60}}"
+  triggers:
+  - trigger: state
+    entity_id: switch.ikea_of_sweden_knycklan_receiver_switch
+    to: 'on'
+  actions:
+    target:
+      entity_id: timer.vattenaltan
+    action: timer.start
+    data:
+      duration: '{{states(''input_number.vattenaltantid'')|int*60}}'
 - alias: Vattna altan stop
   id: Vattna altan stop
   description: When times run out, switch turned off
-  trigger:
-    - platform: event
-      event_type: timer.finished
-      event_data:
-        entity_id: timer.vattenaltan
-  action:
-    - service: switch.turn_off
-      target:
-        entity_id: switch.ikea_of_sweden_knycklan_receiver_switch
+  triggers:
+  - trigger: event
+    event_type: timer.finished
+    event_data:
+      entity_id: timer.vattenaltan
+  actions:
+    target:
+      entity_id: switch.ikea_of_sweden_knycklan_receiver_switch
+    action: switch.turn_off
 - alias: Vattna altan cykel 1
   id: Vattna altan cykel 1
   description: Kommer att slå på vatten vid angivet klockslag
-  trigger:
-    - platform: time
-      at: input_datetime.vattenaltancykel1
-  condition:
-    '{%set markday="input_boolean.altan"+now().weekday()|string %} {{not
+  triggers:
+  - trigger: time
+    at: input_datetime.vattenaltancykel1
+  condition: '{%set markday="input_boolean.altan"+now().weekday()|string %} {{not
     is_state("input_datetime.vattenaltancykel1","00:00:00")  and is_state(markday,"on")}}'
-  action:
-    - service: switch.turn_on
-      target:
-        entity_id: switch.ikea_of_sweden_knycklan_receiver_switch
+  actions:
+  - target:
+      entity_id: switch.ikea_of_sweden_knycklan_receiver_switch
+    action: switch.turn_on
 - alias: Vattna växthus
   id: Vattna växthus timer
   description: Timer is started when the switch is set to on.
-  trigger:
-    - platform: state
-      entity_id: switch.ikea_of_sweden_knycklan_receiver_switch_2
-      to: "on"
-  action:
-    - service: timer.start
-      target:
-        entity_id: timer.vattenvaxthus
-      data:
-        duration: "{{states('input_number.vattenvaxthustid')|int*60}}"
+  triggers:
+  - trigger: state
+    entity_id: switch.knycklan_boden_switch_3
+    to: 'on'
+  actions:
+  - target:
+      entity_id: timer.vattenvaxthus
+    action: timer.start
+    data:
+      duration: '{{states(''input_number.vattenvaxthustid'')|int*60}}'
 - alias: Vattna vaxthus stop
   id: Vattna vaxthus stop
   description: When times run out, switch turned off
-  trigger:
-    - platform: event
-      event_type: timer.finished
-      event_data:
-        entity_id: timer.vattenvaxthus
-  action:
-    - service: switch.turn_off
-      target:
-        entity_id: switch.ikea_of_sweden_knycklan_receiver_switch_2
+  triggers:
+  - trigger: event
+    event_type: timer.finished
+    event_data:
+      entity_id: timer.vattenvaxthus
+  actions:
+  - target:
+      entity_id: switch.knycklan_boden_switch_3
+    action: switch.turn_off
 - alias: Vattna växthus cykel 1
   id: Vattna växthus cykel 1
   description: Kommer att slå på vatten vid angivet klockslag
-  trigger:
-    - platform: time
-      at: input_datetime.vattenvaxthuscykel1
-  condition:
-    '{%set markday="input_boolean.vaxthus"+now().weekday()|string %} {{not
+  triggers:
+  - trigger: time
+    at: input_datetime.vattenvaxthuscykel1
+  condition: '{%set markday="input_boolean.vaxthus"+now().weekday()|string %} {{not
     is_state("input_datetime.vattenvaxthuscykel1","00:00:00")  and is_state(markday,"on")}}'
-  action:
-    - service: switch.turn_on
-      target:
-        entity_id: switch.ikea_of_sweden_knycklan_receiver_switch_2
-- id: "1689618842914"
-  alias: Söder ner
-  description: ""
-  trigger:
-    - platform: time_pattern
-      minutes: 5
+  actions:
+  - target:
+      entity_id: switch.knycklan_boden_switch_3
+    action: switch.turn_on
+- alias: Söder ner
+  id: Söder ner
+  description: ''
+  triggers:
+  - trigger: time_pattern
+    minutes: 5
   condition:
-    - "{{ is_state('input_boolean.auto_solskydd','on')}}"
-    - "{{ (state_attr('sun.sun', 'elevation') > 40.0) or (is_state_attr('sun.sun','rising',false) and state_attr('sun.sun', 'elevation') > 30.0)}}"
-    - "{{is_state('cover.soder','open')}}"
-    - "{{ states('weather.hem') in ['sunny','partlycloudy']}}"
+  - '{{ is_state(''input_boolean.auto_solskydd'',''on'')}}'
+  - '{{ (state_attr(''sun.sun'', ''elevation'') > 40.0) or (is_state_attr(''sun.sun'',''rising'',false)
+    and state_attr(''sun.sun'', ''elevation'') > 30.0)}}'
+  - '{{is_state(''cover.soder'',''open'')}}'
+  - '{{ states(''weather.hem'') in [''sunny'',''partlycloudy'']}}'
   action:
-    - device_id: f99f43011bb7a78f505fc0fc484c9cde
-      domain: cover
+  - service: cover.close_cover
+    target:
       entity_id: cover.soder
-      type: close
+    data: {}
   mode: single
 - alias: Söder upp under dagen
   id: Söder upp under dagen
-  description: ""
-  trigger:
-    - platform: time_pattern
-      minutes: 7
+  description: ''
+  triggers:
+  - trigger: time_pattern
+    minutes: 7
   condition:
-    - "{{ is_state('input_boolean.auto_solskydd','on')}}"
-    - "{{ state_attr('sun.sun', 'elevation') > 10.0 }}"
-    - "{{is_state('cover.soder','closed')}}"
-    - "{{ states('weather.hem') in ['cloudy']}}"
-  action:
-    - device_id: f99f43011bb7a78f505fc0fc484c9cde
-      domain: cover
+  - '{{ is_state(''input_boolean.auto_solskydd'',''on'')}}'
+  - '{{ state_attr(''sun.sun'', ''elevation'') > 10.0 }}'
+  - '{{is_state(''cover.soder'',''closed'')}}'
+  - '{{ states(''weather.hem'') in [''cloudy'']}}'
+  actions:
+  - action: cover.open_cover
+    target:
       entity_id: cover.soder
-      type: open
+    data: {}
   mode: single
-- id: "1689619238335"
-  alias: Söder upp
-  description: "Upp på kvällen"
-  trigger:
-    - platform: time_pattern
-      minutes: 8
+- alias: Söder upp
+  id: Söder upp
+  description: Upp på kvällen
+  triggers:
+  - trigger: time_pattern
+    minutes: 8
   condition:
-    - "{{ is_state('input_boolean.auto_solskydd','on')}}"
-    - "{{ state_attr('sun.sun', 'elevation') < 10.0 }}"
-    - "{{is_state_attr('sun.sun','rising',false) }}"
-    - "{{is_state('cover.soder','closed')}}"
-  action:
-    - device_id: f99f43011bb7a78f505fc0fc484c9cde
-      domain: cover
+  - '{{ is_state(''input_boolean.auto_solskydd'',''on'')}}'
+  - '{{ state_attr(''sun.sun'', ''elevation'') < 10.0 }}'
+  - '{{is_state_attr(''sun.sun'',''rising'',false) }}'
+  - '{{is_state(''cover.soder'',''closed'')}}'
+  actions:
+  - action: cover.open_cover
+    target:
       entity_id: cover.soder
-      type: open
+    data: {}
+  mode: single
+- id: Väster ner
+  alias: Väster ner
+  description: ''
+  triggers:
+  - trigger: time_pattern
+    minutes: 5
+  condition:
+  - condition: template
+    value_template: '{{ is_state(''input_boolean.auto_solskydd'',''on'')}}'
+  - condition: template
+    value_template: '{{ (state_attr(''sun.sun'', ''elevation'') > 45.0) or (is_state_attr(''sun.sun'',''rising'',false)
+      and state_attr(''sun.sun'', ''elevation'') > 30.0)}}'
+  - condition: template
+    value_template: '{{is_state(''cover.vaster'',''open'')}}'
+  - condition: template
+    value_template: '{{is_state_attr(''sun.sun'',''rising'',false) }}'
+  - condition: template
+    value_template: '{{ states(''weather.hem'') in [''sunny'',''partlycloudy'']}}'
+  actions:
+  - action: cover.close_cover
+    data: {}
+    target:
+      entity_id: cover.vaster
+  mode: single
+- id: Väster upp under dagen
+  alias: Väster upp under dagen
+  description: ''
+  triggers:
+  - trigger: time_pattern
+    minutes: 7
+  condition:
+  - condition: template
+    value_template: '{{ is_state(''input_boolean.auto_solskydd'',''on'')}}'
+  - condition: template
+    value_template: '{{ state_attr(''sun.sun'', ''elevation'') > 10.0 }}'
+  - condition: template
+    value_template: '{{is_state(''cover.vaster'',''closed'')}}'
+  - condition: template
+    value_template: '{{ states(''weather.hem'') in [''cloudy'']}}'
+  actions:
+  - action: cover.open_cover
+    data: {}
+    target:
+      entity_id: cover.vaster
+  mode: single
+- id: Väster upp
+  alias: Väster upp
+  description: Väster upp på kvällen
+  triggers:
+  - trigger: time_pattern
+    minutes: 8
+  condition:
+  - condition: template
+    value_template: '{{ is_state(''input_boolean.auto_solskydd'',''on'')}}'
+  - condition: template
+    value_template: '{{ state_attr(''sun.sun'', ''elevation'') < 10.0 }}'
+  - condition: template
+    value_template: '{{is_state_attr(''sun.sun'',''rising'',false) }}'
+  - condition: template
+    value_template: '{{is_state(''cover.vaster'',''closed'')}}'
+  actions:
+  - action: cover.open_cover
+    data: {}
+    target:
+      entity_id: cover.vaster
+  mode: single
+- id: '1715148162927'
+  alias: 'IKEA Rodret Dimmer Controls (ZHA/Z2M) Test '
+  description: ''
+  use_blueprint:
+    path: damru/ikea-rodret_E2201_ZHA-Z2M_control-anything.yaml
+    input:
+      remote_device: 88f090c0834b55082cad5ea6b5214502
+      on_press_action:
+      - service: notify.persistent_notification
+        metadata: {}
+        data:
+          message: ON knapp
+#
+#
+- id: '1746984427312'
+  alias: testA
+  description: ''
+  triggers:
+  - trigger: state
+    entity_id:
+    - input_button.testa
+  conditions: []
+  actions:
+  - action: input_boolean.toggle
+    metadata: {}
+    data: {}
+    target:
+      entity_id: input_boolean.testa
+  - action: switch.turn_on
+    metadata: {}
+    data: {}
+    target:
+      entity_id: switch.koket_ii_switch_2
   mode: single
 
-- alias: Väster ner
-  id: "Väster ner"
-  description: ""
-  trigger:
-    - platform: time_pattern
-      minutes: 5
-  condition:
-    - "{{ is_state('input_boolean.auto_solskydd','on')}}"
-    - "{{ (state_attr('sun.sun', 'elevation') > 45.0) or (is_state_attr('sun.sun','rising',false) and state_attr('sun.sun', 'elevation') > 30.0)}}"
-    - "{{is_state('cover.sunea_scr_40_io','open')}}"
-    - "{{is_state_attr('sun.sun','rising',false) }}"
-    - "{{ states('weather.hem') in ['sunny','partlycloudy']}}"
-  action:
-    - service: cover.close_cover
-      target:
-        entity_id: cover.sunea_scr_40_io    
-  mode: single
-- alias: Väster upp under dagen
-  id: "Väster upp under dagen"
-  description: ""
-  trigger:
-    - platform: time_pattern
-      minutes: 7
-  condition:
-    - "{{ is_state('input_boolean.auto_solskydd','on')}}"
-    - "{{ state_attr('sun.sun', 'elevation') > 10.0 }}"
-    - "{{is_state('cover.sunea_scr_40_io','closed')}}"
-    - "{{ states('weather.hem') in ['cloudy']}}"
-  action:
-    - service: cover.open_cover
-      target:
-        entity_id: cover.sunea_scr_40_io    
-  mode: single
-- alias: Väster upp
-  id: "Väster upp"
-  description: "Väster upp på kvällen"
-  trigger:
-    - platform: time_pattern
-      minutes: 8
-  condition:
-    - "{{ is_state('input_boolean.auto_solskydd','on')}}"
-    - "{{ state_attr('sun.sun', 'elevation') < 10.0 }}"
-    - "{{is_state_attr('sun.sun','rising',false) }}"
-    - "{{is_state('cover.sunea_scr_40_io','closed')}}"
-  action:
-    - service: cover.open_cover
-      target:
-        entity_id: cover.sunea_scr_40_io   
-  mode: single
-
+- alias: Stop test
+  triggers:
+    trigger: state
+    entity_id: input_boolean.testa
+    from: 'off'
+    for: 
+      seconds: 5
+    to: 'on'
+  conditions: []
+  actions:
+  - action: input_boolean.toggle
+    metadata: {}
+    data: {}
+    target:
+      entity_id: input_boolean.testa
+  - action: switch.turn_off
+    metadata: {}
+    data: {}
+    target:
+      entity_id: switch.koket_ii_switch_2

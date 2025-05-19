@@ -15,6 +15,17 @@ timer:
 
 template:
   - sensor:
+      - name: Rainfall today
+        unit_of_measurement: mm
+        state_class: total_increasing
+        unique_id: rainfall_today
+        state: >-
+          {% set count = states('sensor.rainsensor_flips') | int(0) %}
+          {% set mm = count * 0.30303 %}
+          {% if count >= 0 %}
+            {{ mm|round(1, 'floor') }}
+          {% endif %}
+
       - name: "Heating level"
         state: "Normal"
       #          {% if states('sensor.electricity_price_torngard_201')|float(0) > states('input_number.max_pris')|float(0) %}
@@ -30,8 +41,9 @@ template:
       #  state: "{{ as_timestamp(states('sensor.date_time_iso')) | timestamp_custom('%H') }}"
       #  icon: "mdi:calendar-clock"
       - name: "Sun power"
+        unique_id: "Sun power"
         state: >
-          {% if states('sensor.nordpool_kwh_se4_sek_3_10_0')|float(0) < (state_attr('sensor.nordpool_kwh_se4_sek_3_10_0','average')|float(0) + states('input_number.fees')|float(0)/100 +states('input_number.natavgift')|float(0)/100)*1.25 and states('sensor.inverter_active_power')|float(0) > 500 %}
+          {% if states('sensor.nordpool_kwh_se4_sek_3_10_0')|float(0) < (state_attr('sensor.nordpool_kwh_se4_sek_3_10_0','average')|float(0) + states('input_number.fees')|float(0)/100 +states('input_number.natavgift')|float(0)/100)*1.25 and states('sensor.inverter_active_power')|float(0) > 1000 and states('input_select.battery_mode') != 'Discharge' %}
             on
           {% else %}
             off
@@ -58,9 +70,9 @@ template:
         state: >
           {% set netcost= 0.70 %}
           {% if states('sensor.battery_charge_discharge_power')|float(0) > 0 %}
-          {{states('sensor.battery_charge_discharge_power')|float(0)*(states('sensor.electricity_price_torngard_201')|float(0)+ netcost)/1000.0}}
+          {{states('sensor.battery_charge_discharge_power')|float(0)*(states('sensor.nordpool_kwh_se4_sek_3_10_0')|float(0)+ netcost)/1000.0}}
           {% else %}
-          {{states('sensor.battery_charge_discharge_power')|float(0)*states('sensor.electricity_price_torngard_201')|float(0)/1000.0}}
+          {{states('sensor.battery_charge_discharge_power')|float(0)*states('sensor.nordpool_kwh_se4_sek_3_10_0')|float(0)/1000.0}}
           {% endif %}
       - name: "Instant cost of electricity"
         unique_id: "Instant cost of electricity"
@@ -69,9 +81,9 @@ template:
         state: >
           {% set netcost= 0.70 %}
           {% if states('sensor.power_meter_active_power')|float(0) < 0 %}
-          {{states('sensor.power_meter_active_power')|float(0)*(states('sensor.electricity_price_torngard_201')|float(0)+netcost)/1000.0}}
+          {{states('sensor.power_meter_active_power')|float(0)*(states('sensor.nordpool_kwh_se4_sek_3_10_0')|float(0)+netcost)/1000.0}}
           {% else %}
-          {{states('sensor.power_meter_active_power')|float(0)*states('sensor.electricity_price_torngard_201')|float(0)/1000.0}}
+          {{states('sensor.power_meter_active_power')|float(0)*states('sensor.nordpool_kwh_se4_sek_3_10_0')|float(0)/1000.0}}
           {% endif %}
       - name: "Instant value self consumption"
         unique_id: "Instant value self consumption"
@@ -79,9 +91,9 @@ template:
         unit_of_measurement: "SEK"
         state: >
           {%if states('sensor.power_meter_active_power')|float(0) > 0  and states('sensor.inverter_active_power')|float(0) > 0 %}
-          {{(states('sensor.inverter_active_power')|float(0) - states('sensor.power_meter_active_power')|float(0))*states('sensor.electricity_price_torngard_201')|float(0)/1000.0  }}
+          {{(states('sensor.inverter_active_power')|float(0) - states('sensor.power_meter_active_power')|float(0))*states('sensor.nordpool_kwh_se4_sek_3_10_0')|float(0)/1000.0  }}
           {% elif states('sensor.inverter_active_power')|float(0) > 0 %}
-          {{states('sensor.inverter_active_power')|float(0)*states('sensor.electricity_price_torngard_201')|float(0)/1000.0  }}
+          {{states('sensor.inverter_active_power')|float(0)*states('sensor.nordpool_kwh_se4_sek_3_10_0')|float(0)/1000.0  }}
           {% else %}
           0.0
           {%endif %}
@@ -92,6 +104,14 @@ sensor:
   #    - "date"
   #    - "time"
   #    - "date_time_iso"
+
+  - platform: history_stats
+    name: Rainsensor flips
+    entity_id: binary_sensor.ewelink_ds01_opening #The Sonoff window sensor
+    state: "off"
+    type: count
+    start: "{{ now().replace(hour=0, minute=0, second=0) }}"
+    end: "{{ now() }}"
 
   - platform: nordpool
     region: "SE4"
@@ -139,6 +159,12 @@ sensor:
     method: "left"
     #    unit_prefix: k
     round: 2
+  - platform: filter
+    name: "Filtered inverter activer power"
+    entity_id: sensor.inverter_active_power
+    filters:
+      - filter: lowpass
+        time_constant: 10
 
 climate:
   - platform: simple_thermostat
@@ -161,7 +187,7 @@ climate:
   - platform: simple_thermostat
     name: Badrum gamla huset
     heater: light.golvvarme_badrum_on_off
-    target_sensor: sensor.badrum_temperature
+    target_sensor: sensor.badrum_iii_temperature
     min_temp: 0.0
     max_temp: 25.0
     #    target_temp: 5.0
@@ -178,7 +204,7 @@ climate:
   - platform: simple_thermostat
     name: Sovrum plan2
     heater: switch.sovrum_plan2_el
-    target_sensor: sensor.0x00124b0022eb732a_temperature
+    target_sensor: sensor.0xa4c1380deaf2eaf7_temperature
     min_temp: 0.0
     max_temp: 25.0
     #    target_temp: 20.0
@@ -246,7 +272,8 @@ climate:
   - platform: simple_thermostat
     name: Storstuga
     heater: switch.storstuga
-    target_sensor: sensor.storstugan_temperature
+    #target_sensor: sensor.storstugan_temperature
+    target_sensor: sensor.kok
     min_temp: 0.0
     max_temp: 25.0
     #    target_temp: 20.0
@@ -276,6 +303,7 @@ climate:
       minutes: 10
     initial_hvac_mode: "heat"
     precision: 1
+
   - platform: simple_thermostat
     name: Pool
     heater: switch.poolheating
